@@ -1,0 +1,3029 @@
+diff --git a/packages/client/ui-conversation/src/client/chat/ChatView.tsx b/packages/client/ui-conversation/src/client/chat/ChatView.tsx
+index 58e63b3..44990ff 100644
+--- a/packages/client/ui-conversation/src/client/chat/ChatView.tsx
++++ b/packages/client/ui-conversation/src/client/chat/ChatView.tsx
+@@ -129,7 +129,7 @@ function TurnStatus({ startTime, t }: {
+   const showClock = elapsedMs >= 15_000
+   return (
+     <div className={css.turnStatus} role="status" aria-live="polite">
+-      Deep diving...
++      {t('turn.status.deepDiving')}
+       {showClock && (
+         <span className={css.turnStatusClock} aria-hidden>
+           {formatRunDuration(elapsedMs, t)}
+diff --git a/packages/client/ui-conversation/src/client/chat/ReasoningRow.tsx b/packages/client/ui-conversation/src/client/chat/ReasoningRow.tsx
+index f8a340d..7db65c2 100644
+--- a/packages/client/ui-conversation/src/client/chat/ReasoningRow.tsx
++++ b/packages/client/ui-conversation/src/client/chat/ReasoningRow.tsx
+@@ -46,7 +46,7 @@ export function ReasoningRow({ text, running, t }: { text: string; running: bool
+         titleClassName={css.title}
+         chevronClassName={css.chevron}
+         icon={<IconThinkOutline14 size={14} />}
+-        title="Think"
++        title="思考"
+         open={expanded}
+         expandable
+         expandOnRowClick
+diff --git a/packages/client/ui-conversation/src/client/input/machine.ts b/packages/client/ui-conversation/src/client/input/machine.ts
+index 25fdf2f..ba6c48a 100644
+--- a/packages/client/ui-conversation/src/client/input/machine.ts
++++ b/packages/client/ui-conversation/src/client/input/machine.ts
+@@ -524,7 +524,7 @@ export class InputMachine {
+         ? [{ type: 'notice', level: ev.outcome.kind === 'error' ? 'error' : 'info', text: ev.outcome.text }]
+         : []
+     }
+-    const text = ev.message ?? ev.outcome?.text ?? 'command failed'
++    const text = ev.message ?? ev.outcome?.text ?? '命令执行失败'
+     // Drift guard: keep the enter-time draft (same claim) only while the
+     // live draft still equals it; user input typed during flight wins.
+     // Claimed re-entry additionally requires the watch to hold — an
+diff --git a/packages/client/ui-conversation/src/client/locales.ts b/packages/client/ui-conversation/src/client/locales.ts
+index c9b6f65..4865f37 100644
+--- a/packages/client/ui-conversation/src/client/locales.ts
++++ b/packages/client/ui-conversation/src/client/locales.ts
+@@ -122,6 +122,7 @@ export const zh = {
+   'message.retry.delay': '重试延迟：',
+   'message.retry.failure': '失败原因：',
+   'message.turnError': '本轮运行失败',
++  'turn.status.deepDiving': '深入思考中…',
+   'message.maxTokens': '已达到输出 token 上限',
+   'message.maxTokens.hint': '回答被截断，已有输出保留在对话中。发送“继续”可让模型接着输出。',
+   'message.ranFor': '用时 {duration}',
+@@ -291,6 +292,7 @@ export const en = {
+   'message.retry.delay': 'Retry delay: ',
+   'message.retry.failure': 'Failure reason: ',
+   'message.turnError': 'This turn failed',
++  'turn.status.deepDiving': 'Deep diving...',
+   'message.maxTokens': 'Output token limit reached',
+   'message.maxTokens.hint': 'The reply was cut off; earlier output is preserved in the conversation. Send "continue" to let the model resume.',
+   'message.ranFor': 'Ran for {duration}',
+diff --git a/packages/client/ui-conversation/tests/chat-view.client.spec.tsx b/packages/client/ui-conversation/tests/chat-view.client.spec.tsx
+index 360b589..c9b4bd8 100644
+--- a/packages/client/ui-conversation/tests/chat-view.client.spec.tsx
++++ b/packages/client/ui-conversation/tests/chat-view.client.spec.tsx
+@@ -875,7 +875,7 @@ describe('ChatView', () => {
+     const view = render(<h.ChatView {...h.props} />)
+     expect(view.getByTestId('tool-seat-r1')).toBeTruthy()
+     expect(h.toolOwners[0]?.block).toMatchObject({ callId: 'r1', argsRaw: '{"command":"cmd-r1"}' })
+-    expect(view.getByRole('status').textContent).toBe('Deep diving...')
++    expect(view.getByRole('status').textContent).toBe('深入思考中…')
+   })
+ 
+   it('keeps the Tool renderer mounted when a running call settles into log order', () => {
+@@ -935,7 +935,7 @@ describe('ChatView', () => {
+     const view = render(<h.ChatView {...h.props} />)
+     // Freshly mounted (as after a reload) yet already past the 15s gate.
+     const status = view.getByRole('status')
+-    expect(status.textContent).toMatch(/^Deep diving\.\.\.2分0\d秒$/)
++    expect(status.textContent).toMatch(/^深入思考中…2分0\d秒$/)
+     expect(status.querySelector('[aria-hidden="true"]')).not.toBeNull()
+     act(() => {
+       h.set({ queue: [{
+@@ -947,7 +947,7 @@ describe('ChatView', () => {
+         text: 'also',
+       }] })
+     })
+-    expect(status.textContent).toMatch(/^Deep diving\.\.\.2分0\d秒$/)
++    expect(status.textContent).toMatch(/^深入思考中…2分0\d秒$/)
+   })
+ 
+   it('hands each ordered root call to the keyed business-node slot', () => {
+diff --git a/packages/client/ui-conversation/tests/coverage-tails.client.spec.tsx b/packages/client/ui-conversation/tests/coverage-tails.client.spec.tsx
+index b0ce994..7125338 100644
+--- a/packages/client/ui-conversation/tests/coverage-tails.client.spec.tsx
++++ b/packages/client/ui-conversation/tests/coverage-tails.client.spec.tsx
+@@ -33,7 +33,7 @@ describe('tails', () => {
+         streaming
+       />,
+     )
+-    expect(view.getByText('Think')).toBeTruthy()
++    expect(view.getByText('思考')).toBeTruthy()
+     expect(view.getByText('thinking hard')).toBeTruthy()
+     expect(view.getByText(/未知内容块/)).toBeTruthy()
+     const stopped = render(
+diff --git a/packages/client/ui-conversation/tests/reasoning-row.client.spec.tsx b/packages/client/ui-conversation/tests/reasoning-row.client.spec.tsx
+index 62e6ac7..8cf68e6 100644
+--- a/packages/client/ui-conversation/tests/reasoning-row.client.spec.tsx
++++ b/packages/client/ui-conversation/tests/reasoning-row.client.spec.tsx
+@@ -96,7 +96,7 @@ describe('ReasoningRow', () => {
+     expect(row.getAttribute('aria-expanded')).toBe('true')
+     expect(view.getByText(/Check persistence/)).toBeTruthy()
+ 
+-    fireEvent.click(view.getByText('Think'))
++    fireEvent.click(view.getByText('思考'))
+     expect(row.getAttribute('aria-expanded')).toBe('false')
+   })
+ 
+@@ -108,9 +108,9 @@ describe('ReasoningRow', () => {
+         streaming={false}
+       />,
+     )
+-    fireEvent.click(view.getByText('Think'))
++    fireEvent.click(view.getByText('思考'))
+     expect(view.getAllByText(/Inspect the session/)).toHaveLength(1)
+-    expect(view.queryByText('IN')).toBeNull()
++    expect(view.queryByText('输入')).toBeNull()
+     expect(view.container.querySelector('[class*="ioCard"]')).toBeNull()
+     expect(view.container.querySelector('[class*="thinkBody"]')).not.toBeNull()
+   })
+diff --git a/packages/client/ui-settings-models/src/client/locales.ts b/packages/client/ui-settings-models/src/client/locales.ts
+index a49a4f0..5d57119 100644
+--- a/packages/client/ui-settings-models/src/client/locales.ts
++++ b/packages/client/ui-settings-models/src/client/locales.ts
+@@ -176,7 +176,7 @@ export const zh: { [Key in keyof typeof en]: string } = {
+   customAdd: '添加自定义提供方',
+   customTitle: '自定义提供方',
+   customTag: '自定义',
+-  customRoute: 'Provider ID',
++  customRoute: '提供方 ID',
+   customRouteHint: '以小写字母开头的标识，在请求中唯一标识该提供方，并用于派生凭据名。',
+   customRouteInvalid: '需以小写字母开头，之后可用小写字母、数字和短横线。',
+   customRouteTaken: '已有提供方使用了这个 ID。',
+diff --git a/packages/client/ui-settings-plugins/src/client/locales.ts b/packages/client/ui-settings-plugins/src/client/locales.ts
+index 1478e39..285846a 100644
+--- a/packages/client/ui-settings-plugins/src/client/locales.ts
++++ b/packages/client/ui-settings-plugins/src/client/locales.ts
+@@ -84,7 +84,7 @@ export const zh: Record<PluginsSettingsLocaleKey, string> = {
+   agentLoopMaxParallelHint: '同一步内最多同时运行多少个可并行的调用。',
+   webSearchTitle: '网页搜索',
+   webSearchDescription: 'DeepSeek 搜索提供方。',
+-  webSearchApiKey: 'API Key',
++  webSearchApiKey: 'API 密钥',
+   webSearchApiKeyHint: '不写入设置文件。留空表示保持当前密钥。',
+   webSearchApiKeySet: '已配置密钥。',
+   webSearchApiKeyUnset: '未配置密钥；配置之前搜索不可用。',
+diff --git a/packages/client/ui-tool/src/client/tool/components/ToolRow.tsx b/packages/client/ui-tool/src/client/tool/components/ToolRow.tsx
+index bd4add4..5ce775f 100644
+--- a/packages/client/ui-tool/src/client/tool/components/ToolRow.tsx
++++ b/packages/client/ui-tool/src/client/tool/components/ToolRow.tsx
+@@ -271,7 +271,7 @@ export function ToolRow({
+                           <div className={css.ioCard}>
+                             {cardBody !== null && (
+                               <div className={css.ioSection}>
+-                                <span className={css.ioLabel}>IN</span>
++                                <span className={css.ioLabel}>输入</span>
+                                 <span className={css.ioText}>{cardBody}</span>
+                               </div>
+                             )}
+@@ -280,7 +280,7 @@ export function ToolRow({
+                             )}
+                             {outputText !== null && (
+                               <div className={css.ioSection}>
+-                                <span className={css.ioLabel}>OUT</span>
++                                <span className={css.ioLabel}>输出</span>
+                                 <span className={css.ioText} data-error={state === 'error' || undefined}>
+                                   {outputText}
+                                 </span>
+@@ -297,7 +297,7 @@ export function ToolRow({
+               onClick={inspect}
+             >
+               <IconInspectOutline12 />
+-              Inspect
++              检查
+             </button>
+           )}
+         </div>
+diff --git a/packages/client/ui-tool/src/client/tool/models/tool-call-model.ts b/packages/client/ui-tool/src/client/tool/models/tool-call-model.ts
+index fa7cb27..e927715 100644
+--- a/packages/client/ui-tool/src/client/tool/models/tool-call-model.ts
++++ b/packages/client/ui-tool/src/client/tool/models/tool-call-model.ts
+@@ -19,10 +19,10 @@ export type ToolRowVariant = 'search' | 'read' | 'bash' | 'write' | 'edit' | 'co
+ /** Row state semantic; colors self-supplied via StateDot (design gives none). */
+ export type ToolRowState = 'running' | 'ok' | 'error' | 'stopped'
+ 
+-/** Figma row titles per variant (design literals, not translatable copy). */
++/** Figma row titles per variant (product copy; Chinese in the shipped app). */
+ export const VARIANT_TITLES: Record<ToolRowVariant, string> = {
+-  search: 'Search', read: 'Read', bash: 'Bash',
+-  write: 'Write', edit: 'Edit', code: 'Code', others: 'Tool call',
++  search: '搜索', read: '读取', bash: 'Bash',
++  write: '写入', edit: '编辑', code: '代码', others: '工具调用',
+ }
+ 
+ /**
+@@ -60,11 +60,11 @@ const TOOL_VARIANTS: Record<string, ToolRowVariant> = {
+ 
+ /** Tool-owned titles that refine a generic row variant without replacing it. */
+ const TOOL_TITLES: Record<string, string> = {
+-  cordis_package_inspect: 'Inspect',
+-  cordis_runtime_inspect: 'Inspect',
+-  cordis_run: 'Run Cordis Plugin',
+-  cordis_stop: 'Stop Cordis Plugin',
+-  cordis_undefine: 'Remove Cordis Plugin',
++  cordis_package_inspect: '检查',
++  cordis_runtime_inspect: '检查',
++  cordis_run: '运行 Cordis 插件',
++  cordis_stop: '停止 Cordis 插件',
++  cordis_undefine: '移除 Cordis 插件',
+   pwsh: 'Pwsh',
+ }
+ 
+diff --git a/packages/client/ui-tool/src/client/tool/toolviews/bash-sample.tsx b/packages/client/ui-tool/src/client/tool/toolviews/bash-sample.tsx
+index dc9a02a..8cbd2e0 100644
+--- a/packages/client/ui-tool/src/client/tool/toolviews/bash-sample.tsx
++++ b/packages/client/ui-tool/src/client/tool/toolviews/bash-sample.tsx
+@@ -134,7 +134,7 @@ export function BashRow({ toolName, block, sessionId, useSessions, inspect, t }:
+               <div className={css.ioCard}>
+                 {model.body !== null && (
+                   <div className={css.ioSection}>
+-                    <span className={css.ioLabel}>IN</span>
++                    <span className={css.ioLabel}>输入</span>
+                     <span className={css.ioText}>{model.body}</span>
+                   </div>
+                 )}
+@@ -143,7 +143,7 @@ export function BashRow({ toolName, block, sessionId, useSessions, inspect, t }:
+                 )}
+                 {model.output !== null && (
+                   <div className={css.ioSection}>
+-                    <span className={css.ioLabel}>OUT</span>
++                    <span className={css.ioLabel}>输出</span>
+                     <span className={css.ioText} data-error>
+                       {model.output}
+                     </span>
+@@ -154,7 +154,7 @@ export function BashRow({ toolName, block, sessionId, useSessions, inspect, t }:
+           {inspect !== undefined && (
+             <button type="button" className={css.inspectButton} onClick={inspect}>
+               <IconInspectOutline12 />
+-              Inspect
++              检查
+             </button>
+           )}
+         </div>
+diff --git a/packages/client/ui-tool/src/client/tool/toolviews/web-row.tsx b/packages/client/ui-tool/src/client/tool/toolviews/web-row.tsx
+index 3dab222..2203cbf 100644
+--- a/packages/client/ui-tool/src/client/tool/toolviews/web-row.tsx
++++ b/packages/client/ui-tool/src/client/tool/toolviews/web-row.tsx
+@@ -21,14 +21,14 @@ import { CONVERSATION_NS as NS } from '../../locale.ts'
+ /** Full row props: the toolview runtime share plus the standard locale seat. */
+ type WebRowProps = ToolCallViewProps & PropsLocale<'conversation'>
+ 
+-/** web_fetch reads one URL; web_search queries. Titles are figma literals. */
++/** web_fetch reads one URL; web_search queries. Titles are product copy (Chinese in the shipped app). */
+ const WEB_TITLES: Record<string, string> = {
+-  web_search: 'Search',
+-  web_fetch: 'Fetch',
++  web_search: '搜索',
++  web_fetch: '抓取',
+ }
+ 
+ /**
+- * Web row: icon + Search/Fetch · {summary} in the shared ToolRow chrome, with
++ * Web row: icon + 搜索/抓取 · {summary} in the shared ToolRow chrome, with
+  * the completed retrieval's web card as the row's collapsed-by-default card
+  * body. The row discriminates on `toolName` only to pick its icon and title.
+  */
+diff --git a/packages/client/ui-tool/tests/chat-code-subcalls.client.spec.tsx b/packages/client/ui-tool/tests/chat-code-subcalls.client.spec.tsx
+index 1f0cd29..6e5812a 100644
+--- a/packages/client/ui-tool/tests/chat-code-subcalls.client.spec.tsx
++++ b/packages/client/ui-tool/tests/chat-code-subcalls.client.spec.tsx
+@@ -199,7 +199,7 @@ describe('run_code sub-calls through the real chat machinery', () => {
+     // Parent row: the code variant with the model-authored description.
+     const codeRoot = view.container.querySelector('[data-variant="code"]')
+     expect(codeRoot).not.toBeNull()
+-    expect(view.getByText('Code')).toBeTruthy()
++    expect(view.getByText('代码')).toBeTruthy()
+     expect(view.getByText('List the notes directory')).toBeTruthy()
+ 
+     // Nested rows are ALWAYS visible (no parent expand needed): the bash
+@@ -211,7 +211,7 @@ describe('run_code sub-calls through the real chat machinery', () => {
+     expect(nest!.querySelector('[data-sample="bash"]')).not.toBeNull()
+     expect(view.getByText('Bash')).toBeTruthy()
+     expect(view.getByText('List notes')).toBeTruthy()
+-    expect(view.getByText('Tool call')).toBeTruthy()
++    expect(view.getByText('工具调用')).toBeTruthy()
+   })
+ 
+   it('renders Cordis sub-calls with lifecycle titles over the generic variants', async () => {
+@@ -227,9 +227,9 @@ describe('run_code sub-calls through the real chat machinery', () => {
+ 
+     // Each run-control verb names its act and shows the package id; without the
+     // owned titles all three would read "Tool call · cordis_run · dyn-2".
+-    expect(nest.querySelector('[data-tool="cordis_runtime_inspect"]')?.textContent).toContain('Inspect')
+-    expect(nest.querySelector('[data-tool="cordis_run"]')?.textContent).toContain('Run Cordis Plugindyn-2')
+-    expect(nest.querySelector('[data-tool="cordis_undefine"]')?.textContent).toContain('Remove Cordis Plugindyn-2')
++    expect(nest.querySelector('[data-tool="cordis_runtime_inspect"]')?.textContent).toContain('检查')
++    expect(nest.querySelector('[data-tool="cordis_run"]')?.textContent).toContain('运行 Cordis 插件dyn-2')
++    expect(nest.querySelector('[data-tool="cordis_undefine"]')?.textContent).toContain('移除 Cordis 插件dyn-2')
+     // None of them is a code row: the program belongs to cordis_define, whose
+     // own keyed card renders it (the next case covers the code row itself).
+     expect(nest.querySelector('[data-variant="code"]')).toBeNull()
+diff --git a/packages/client/ui-tool/tests/read-card.client.spec.tsx b/packages/client/ui-tool/tests/read-card.client.spec.tsx
+index 3cf318c..beece9c 100644
+--- a/packages/client/ui-tool/tests/read-card.client.spec.tsx
++++ b/packages/client/ui-tool/tests/read-card.client.spec.tsx
+@@ -190,7 +190,7 @@ describe('ReadRow keyed toolview', () => {
+ 
+   it('collapses to the path summary; the whole row toggles the read card', () => {
+     const view = render(<ReadRow {...rowProps(settled())} />)
+-    expect(view.getByText('Read')).toBeTruthy()
++    expect(view.getByText('读取')).toBeTruthy()
+     // Collapsed: the path is the summary link alone, and the card is absent.
+     expect(view.getAllByText('src/a.ts').length).toBe(1)
+     expect(view.container.querySelector('[data-read]')).toBeNull()
+diff --git a/packages/client/ui-tool/tests/search-card.client.spec.tsx b/packages/client/ui-tool/tests/search-card.client.spec.tsx
+index 351c889..575a3af 100644
+--- a/packages/client/ui-tool/tests/search-card.client.spec.tsx
++++ b/packages/client/ui-tool/tests/search-card.client.spec.tsx
+@@ -247,7 +247,7 @@ describe('SearchRow keyed card', () => {
+   it('collapses to the summary row; expanding reveals the grep card', () => {
+     const view = render(<SearchRow {...rowProps(settledGrep(), 'grep')} />)
+     expect(view.getByText('Grep')).toBeTruthy()
+-    expect(view.queryByText('Search')).toBeNull()
++    expect(view.queryByText('搜索')).toBeNull()
+     // Collapsed: the card is not in the DOM until the row is expanded.
+     expect(searchKindOf(view.container)).toBeNull()
+     expect(view.queryByText(/const foo = 1/)).toBeNull()
+@@ -261,7 +261,7 @@ describe('SearchRow keyed card', () => {
+   it('expands to the glob path card', () => {
+     const view = render(<SearchRow {...rowProps(settledGlob(), 'glob')} />)
+     expect(view.getByText('Glob')).toBeTruthy()
+-    expect(view.queryByText('Search')).toBeNull()
++    expect(view.queryByText('搜索')).toBeNull()
+     expect(searchKindOf(view.container)).toBeNull()
+     toggleRow(view)
+     expect(view.getByText('src/a.ts')).toBeTruthy()
+diff --git a/packages/client/ui-tool/tests/terminal-card.client.spec.tsx b/packages/client/ui-tool/tests/terminal-card.client.spec.tsx
+index 8c8fdca..e8078a7 100644
+--- a/packages/client/ui-tool/tests/terminal-card.client.spec.tsx
++++ b/packages/client/ui-tool/tests/terminal-card.client.spec.tsx
+@@ -435,8 +435,8 @@ describe('BashRow terminal card', () => {
+     fireEvent.click(row)
+ 
+     expect(row.getAttribute('aria-expanded')).toBe('true')
+-    expect(view.getByText('IN')).toBeTruthy()
+-    expect(view.getByText('OUT')).toBeTruthy()
++    expect(view.getByText('输入')).toBeTruthy()
++    expect(view.getByText('输出')).toBeTruthy()
+     expect(view.getByText(/"command": "ls -la"/)).toBeTruthy()
+     expect(view.container.querySelector('[data-error]')?.textContent).toBe('Error: command aborted')
+   })
+diff --git a/packages/client/ui-tool/tests/tool-row.client.spec.tsx b/packages/client/ui-tool/tests/tool-row.client.spec.tsx
+index 28c8b5b..56d87a9 100644
+--- a/packages/client/ui-tool/tests/tool-row.client.spec.tsx
++++ b/packages/client/ui-tool/tests/tool-row.client.spec.tsx
+@@ -53,9 +53,9 @@ describe('tool-call-model', () => {
+     // Every define/run pair the model makes puts a row in the flow, so the
+     // generic "Tool call · cordis_run · dyn-1" fallback is user-visible slop.
+     const titleOf = (name: string) => toolRowModel(name, running({ name, argsRaw: '{"id":"dyn-1"}' }))
+-    expect(titleOf('cordis_run').title).toBe('Run Cordis Plugin')
+-    expect(titleOf('cordis_stop').title).toBe('Stop Cordis Plugin')
+-    expect(titleOf('cordis_undefine').title).toBe('Remove Cordis Plugin')
++    expect(titleOf('cordis_run').title).toBe('运行 Cordis 插件')
++    expect(titleOf('cordis_stop').title).toBe('停止 Cordis 插件')
++    expect(titleOf('cordis_undefine').title).toBe('移除 Cordis 插件')
+     // An owned title takes the tool name out of the summary slot, leaving the
+     // package id as the only mutable text.
+     expect(titleOf('cordis_run').summary).toBe('dyn-1')
+@@ -68,14 +68,14 @@ describe('tool-call-model', () => {
+     // title here would be a second answer to what the card already renders.
+     const model = toolRowModel('cordis_define', running({ name: 'cordis_define', argsRaw: '{"name":"clock"}' }))
+     expect(model.variant).toBe('others')
+-    expect(model.title).toBe('Tool call')
++    expect(model.title).toBe('工具调用')
+   })
+ 
+   it('has dropped the v2 mount verbs that no longer exist', () => {
+     // Keeping them would be a mapping for a tool nothing can call.
+     expect(classifyTool('cordis_mount')).toBe('others')
+-    expect(toolRowModel('cordis_mount', running({ name: 'cordis_mount', argsRaw: '{}' })).title).toBe('Tool call')
+-    expect(toolRowModel('cordis_unmount', running({ name: 'cordis_unmount', argsRaw: '{}' })).title).toBe('Tool call')
++    expect(toolRowModel('cordis_mount', running({ name: 'cordis_mount', argsRaw: '{}' })).title).toBe('工具调用')
++    expect(toolRowModel('cordis_unmount', running({ name: 'cordis_unmount', argsRaw: '{}' })).title).toBe('工具调用')
+   })
+ 
+   it('gives the pwsh shell row the bash family treatment with its own title', () => {
+@@ -178,7 +178,7 @@ describe('tool-call-model', () => {
+       argsRaw: '{"what":"api","name":"tools"}',
+     }))).toMatchObject({
+       variant: 'read',
+-      title: 'Inspect',
++      title: '检查',
+       summary: 'api',
+     })
+     expect(toolRowModel('cordis_run', running({
+@@ -186,14 +186,14 @@ describe('tool-call-model', () => {
+       argsRaw: '{"id":"dyn-2"}',
+     }))).toMatchObject({
+       variant: 'others',
+-      title: 'Run Cordis Plugin',
++      title: '运行 Cordis 插件',
+       summary: 'dyn-2',
+     })
+     expect(toolRowModel('cordis_undefine', result({
+       call: { name: 'cordis_undefine', argsRaw: '{"id":"dyn-2"}' },
+     }))).toMatchObject({
+       variant: 'others',
+-      title: 'Remove Cordis Plugin',
++      title: '移除 Cordis 插件',
+       summary: 'dyn-2',
+     })
+   })
+@@ -339,9 +339,9 @@ describe('ToolRow', () => {
+     const inspect = vi.fn()
+     const view = render(<ToolRow {...rowProps} inspect={inspect} />)
+     // Collapsed: no pill.
+-    expect(view.queryByText('Inspect')).toBeNull()
++    expect(view.queryByText('检查')).toBeNull()
+     fireEvent.click(view.getByRole('button', { name: /Bash/ }))
+-    const pill = view.getByText('Inspect')
++    const pill = view.getByText('检查')
+     fireEvent.click(pill)
+     expect(inspect).toHaveBeenCalledTimes(1)
+     // The pill click must not collapse the row (body is a .row sibling).
+@@ -351,25 +351,25 @@ describe('ToolRow', () => {
+   it('no inspect callback, no pill', () => {
+     const view = render(<ToolRow {...rowProps} />)
+     fireEvent.click(view.getByRole('button'))
+-    expect(view.queryByText('Inspect')).toBeNull()
++    expect(view.queryByText('检查')).toBeNull()
+   })
+ 
+   it('the expanded card gutter-labels each section it carries (IN / OUT)', () => {
+     const both = render(<ToolRow {...rowProps} output="result text" />)
+     fireEvent.click(both.getByRole('button'))
+-    expect(both.getByText('IN')).toBeTruthy()
+-    expect(both.getByText('OUT')).toBeTruthy()
++    expect(both.getByText('输入')).toBeTruthy()
++    expect(both.getByText('输出')).toBeTruthy()
+     expect(both.getByText('result text')).toBeTruthy()
+     cleanup()
+     const inputOnly = render(<ToolRow {...rowProps} />)
+     fireEvent.click(inputOnly.getByRole('button'))
+-    expect(inputOnly.getByText('IN')).toBeTruthy()
+-    expect(inputOnly.queryByText('OUT')).toBeNull()
++    expect(inputOnly.getByText('输入')).toBeTruthy()
++    expect(inputOnly.queryByText('输出')).toBeNull()
+     cleanup()
+     const outputOnly = render(<ToolRow {...rowProps} body={null} output="only out" />)
+     fireEvent.click(outputOnly.getByRole('button'))
+-    expect(outputOnly.queryByText('IN')).toBeNull()
+-    expect(outputOnly.getByText('OUT')).toBeTruthy()
++    expect(outputOnly.queryByText('输入')).toBeNull()
++    expect(outputOnly.getByText('输出')).toBeTruthy()
+     expect(outputOnly.getByText('only out')).toBeTruthy()
+   })
+ })
+@@ -390,7 +390,7 @@ describe('GenericToolCard', () => {
+     const view = render(
+       <GenericToolCard {...props('todo_write', running({ name: 'todo_write', argsRaw: '{"note":"x"}' }))} />,
+     )
+-    expect(view.getByText('Tool call')).toBeTruthy()
++    expect(view.getByText('工具调用')).toBeTruthy()
+     expect(view.container.querySelector('[data-variant="others"]')).not.toBeNull()
+     expect(view.container.querySelector('[data-state="running"]')).not.toBeNull()
+   })
+@@ -402,7 +402,7 @@ describe('GenericToolCard', () => {
+         argsRaw: '{"file_path":"src/x.ts","old_string":"before","new_string":"after"}',
+       }))} />,
+     )
+-    expect(view.getByText('Edit')).toBeTruthy()
++    expect(view.getByText('编辑')).toBeTruthy()
+     expect(view.getByText('src/x.ts')).toBeTruthy()
+     expect(view.container.querySelector('[data-variant="edit"]')).not.toBeNull()
+     expect(view.container.querySelector('svg')).not.toBeNull()
+@@ -415,7 +415,7 @@ describe('GenericToolCard', () => {
+         argsRaw: '{"file_path":"src/x.ts","content":"hello"}',
+       }))} />,
+     )
+-    expect(view.getByText('Write')).toBeTruthy()
++    expect(view.getByText('写入')).toBeTruthy()
+     expect(view.getByText('src/x.ts')).toBeTruthy()
+     expect(view.container.querySelector('[data-variant="write"]')).not.toBeNull()
+     expect(view.container.querySelector('svg')).not.toBeNull()
+@@ -425,7 +425,7 @@ describe('GenericToolCard', () => {
+     const inspect = vi.fn()
+     const view = render(<GenericToolCard {...props('bash', result())} inspect={inspect} />)
+     fireEvent.click(view.getByRole('button', { name: /Bash/ }))
+-    fireEvent.click(view.getByText('Inspect'))
++    fireEvent.click(view.getByText('检查'))
+     expect(inspect).toHaveBeenCalledTimes(1)
+   })
+ 
+diff --git a/packages/client/ui-tool/tests/toolview-slot.client.spec.tsx b/packages/client/ui-tool/tests/toolview-slot.client.spec.tsx
+index 12af87c..4e6a630 100644
+--- a/packages/client/ui-tool/tests/toolview-slot.client.spec.tsx
++++ b/packages/client/ui-tool/tests/toolview-slot.client.spec.tsx
+@@ -101,7 +101,7 @@ describe('keyed toolview hole through the real machinery', () => {
+     expect(view.getByText('Bash')).toBeTruthy()
+     expect(view.getByText('Build')).toBeTruthy()
+     // mystery: no registration under that key → render-site fallback.
+-    expect(view.getByText('Tool call')).toBeTruthy()
++    expect(view.getByText('工具调用')).toBeTruthy()
+     await b.runtime.dispose()
+   })
+ 
+@@ -118,10 +118,10 @@ describe('keyed toolview hole through the real machinery', () => {
+     // names its act and carries the package id rather than falling back to the
+     // generic "Tool call · <name> · <id>" row.
+     const rowText = (name: string) => view.container.querySelector(`[data-tool="${name}"]`)?.textContent
+-    expect(rowText('cordis_runtime_inspect')).toContain('Inspect')
+-    expect(rowText('cordis_run')).toContain('Run Cordis Plugindyn-2')
+-    expect(rowText('cordis_stop')).toContain('Stop Cordis Plugindyn-2')
+-    expect(rowText('cordis_undefine')).toContain('Remove Cordis Plugindyn-2')
++    expect(rowText('cordis_runtime_inspect')).toContain('检查')
++    expect(rowText('cordis_run')).toContain('运行 Cordis 插件dyn-2')
++    expect(rowText('cordis_stop')).toContain('停止 Cordis 插件dyn-2')
++    expect(rowText('cordis_undefine')).toContain('移除 Cordis 插件dyn-2')
+     // No run-control verb is a code row; the program is cordis_define's, and its
+     // own keyed card owns that rendering.
+     expect(view.container.querySelector('[data-variant="code"]')).toBeNull()
+@@ -151,7 +151,7 @@ describe('keyed toolview hole through the real machinery', () => {
+   it('a live keyed registration takes over its tool row and unload reverts to the fallback', async () => {
+     const b = await bench([toolResult(3, 'c2', 'mystery', '{"n":1}')])
+     const view = b.runtime.renderRoot()
+-    expect(view.getByText('Tool call')).toBeTruthy()
++    expect(view.getByText('工具调用')).toBeTruthy()
+     let dispose = (): void => {}
+     dispose = b.slots.register(
+       { name: 'tool.call.toolview', key: 'mystery' },
+@@ -159,11 +159,11 @@ describe('keyed toolview hole through the real machinery', () => {
+     await b.runtime.flush()
+     // Per-key version tick: the row flipped without a remount of the view.
+     expect(view.getByTestId('mystery-row')).toBeTruthy()
+-    expect(view.queryByText('Tool call')).toBeNull()
++    expect(view.queryByText('工具调用')).toBeNull()
+     dispose()
+     await b.runtime.flush()
+     expect(view.queryByTestId('mystery-row')).toBeNull()
+-    expect(view.getByText('Tool call')).toBeTruthy()
++    expect(view.getByText('工具调用')).toBeTruthy()
+     await b.runtime.dispose()
+   })
+ 
+diff --git a/packages/client/ui-tool/tests/web-card.client.spec.tsx b/packages/client/ui-tool/tests/web-card.client.spec.tsx
+index 279fad7..3cc6a2c 100644
+--- a/packages/client/ui-tool/tests/web-card.client.spec.tsx
++++ b/packages/client/ui-tool/tests/web-card.client.spec.tsx
+@@ -144,7 +144,7 @@ describe('chat row web body', () => {
+     const globe = render(<IconGlobeOutline14 />).container.querySelector('svg')!.outerHTML
+     const view = render(<WebRow {...rowProps(settledSearch(), 'web_search')} />)
+     // Collapsed: the summary row alone, no card in the DOM.
+-    expect(view.getByText('Search')).toBeTruthy()
++    expect(view.getByText('搜索')).toBeTruthy()
+     expect(view.container.querySelector('svg')?.outerHTML).toBe(globe)
+     expect(view.queryByText('Titled')).toBeNull()
+     expect(view.container.querySelector('[data-web]')).toBeNull()
+@@ -158,7 +158,7 @@ describe('chat row web body', () => {
+ 
+   it('the WebRow expands to the fetch card, titled Fetch', () => {
+     const view = render(<WebRow {...rowProps(settledFetch(), 'web_fetch')} />)
+-    expect(view.getByText('Fetch')).toBeTruthy()
++    expect(view.getByText('抓取')).toBeTruthy()
+     expect(view.container.querySelector('[data-web]')).toBeNull()
+     toggleRow(view)
+     // The url shows as the card's link; scope to the card.
+@@ -169,7 +169,7 @@ describe('chat row web body', () => {
+ 
+   it('a running web call is the summary row alone, with nothing to expand', () => {
+     const view = render(<WebRow {...rowProps(runningSearch(), 'web_search')} />)
+-    expect(view.getByText('Search')).toBeTruthy()
++    expect(view.getByText('搜索')).toBeTruthy()
+     expect(view.queryByText('Titled')).toBeNull()
+     // No card material and no expandable body: clicking the row reveals nothing.
+     expect(view.container.querySelector('[data-expandable]')).toBeNull()
+@@ -180,7 +180,7 @@ describe('chat row web body', () => {
+     const view = render(<WebRow {...rowProps(settledSearch({
+       isError: true, resultView: { card: 'generic' },
+     }), 'web_search')} />)
+-    expect(view.getByText('Search')).toBeTruthy()
++    expect(view.getByText('搜索')).toBeTruthy()
+     expect(view.container.querySelector('[data-web]')).toBeNull()
+     // The row reflects the error state so the summary line still reads as failed.
+     expect(view.container.querySelector('[data-state="error"]')).not.toBeNull()
+diff --git a/packages/client/ui-trajectory/src/client/TrajectoryCell.tsx b/packages/client/ui-trajectory/src/client/TrajectoryCell.tsx
+index 51ec2a0..aacbf8e 100644
+--- a/packages/client/ui-trajectory/src/client/TrajectoryCell.tsx
++++ b/packages/client/ui-trajectory/src/client/TrajectoryCell.tsx
+@@ -16,13 +16,13 @@ export type {
+ 
+ /** Display label per kind (matches the design tags). */
+ const KIND_LABEL: Record<TrajectoryCellKind, string> = {
+-  system: 'System',
+-  user: 'User',
+-  context: 'Context',
+-  compacted: 'Compacted',
+-  message: 'Message',
+-  tool: 'Tool',
+-  subtool: 'Sub',
++  system: '系统',
++  user: '用户',
++  context: '上下文',
++  compacted: '已压缩',
++  message: '消息',
++  tool: '工具',
++  subtool: '子工具',
+ }
+ 
+ const TAG_CLASS: Record<TrajectoryCellKind, string | undefined> = {
+diff --git a/packages/client/ui-trajectory/src/client/TrajectoryTable.tsx b/packages/client/ui-trajectory/src/client/TrajectoryTable.tsx
+index dab72e6..e98b1c7 100644
+--- a/packages/client/ui-trajectory/src/client/TrajectoryTable.tsx
++++ b/packages/client/ui-trajectory/src/client/TrajectoryTable.tsx
+@@ -36,13 +36,13 @@ const VIRTUAL_OVERSCAN_ROWS = 12
+ const VIRTUAL_INITIAL_VIEWPORT_HEIGHT_PX = 600
+ 
+ const KIND_LABEL: Record<TrajectoryCellKind, string> = {
+-  system: 'SYSTEM',
+-  user: 'USER',
+-  context: 'CONTEXT',
+-  compacted: 'COMPACTED',
+-  message: 'ASSISTANT',
+-  tool: 'TOOL',
+-  subtool: 'SUBTOOL',
++  system: '系统',
++  user: '用户',
++  context: '上下文',
++  compacted: '已压缩',
++  message: '助手',
++  tool: '工具',
++  subtool: '子工具',
+ }
+ 
+ function ToolWrenchIcon(): ReactNode {
+@@ -207,18 +207,18 @@ const TOOL_REQUEST_MAX_WIDTH = 480
+ const DEFAULT_TOOL_REQUEST_SHARE = 0.36
+ const DEFAULT_TOOL_REQUEST_OFFSET = 56
+ const SYSTEM_PROMPT_TABS: readonly DetailTabItem[] = [
+-  { id: 'system-prompt', label: 'System Prompt' },
+-  { id: 'tools', label: 'Tools' },
++  { id: 'system-prompt', label: '系统提示词' },
++  { id: 'tools', label: '工具' },
+ ]
+ const SYSTEM_UPDATE_TABS: readonly DetailTabItem[] = [
+-  { id: 'diff', label: 'Diff' },
++  { id: 'diff', label: '差异' },
+   ...SYSTEM_PROMPT_TABS,
+ ]
+ const REQUEST_TABS: readonly DetailTabItem[] = [
+-  { id: 'overview', label: 'Summary' },
+-  { id: 'options', label: 'Options' },
+-  { id: 'usage', label: 'Usage' },
+-  { id: 'timing', label: 'Timing' },
++  { id: 'overview', label: '摘要' },
++  { id: 'options', label: '选项' },
++  { id: 'usage', label: '用量' },
++  { id: 'timing', label: '计时' },
+ ]
+ 
+ type TrajectorySplitStyle = CSSProperties & {
+@@ -263,7 +263,7 @@ function formatDurationMs(milliseconds: number): string {
+ }
+ 
+ function formatStartedAt(timestamp: number | null): string {
+-  if (timestamp === null || !Number.isFinite(timestamp)) return 'Not available'
++  if (timestamp === null || !Number.isFinite(timestamp)) return '不可用'
+   const date = new Date(timestamp)
+   const two = (value: number) => String(value).padStart(2, '0')
+   const three = (value: number) => String(value).padStart(3, '0')
+@@ -283,13 +283,13 @@ function clickSelectsText(target: Node): boolean {
+ 
+ function StartedAtValue({ timestamp }: { timestamp: number | null }) {
+   const [showUnix, setShowUnix] = useState(false)
+-  if (timestamp === null || !Number.isFinite(timestamp)) return <dd>Not available</dd>
++  if (timestamp === null || !Number.isFinite(timestamp)) return <dd>不可用</dd>
+   return (
+     <dd>
+       <button
+         type="button"
+         className={css.timestampToggle}
+-        title={showUnix ? 'Show local time' : 'Show Unix timestamp'}
++        title={showUnix ? '显示本地时间' : '显示 Unix 时间戳'}
+         onClick={(event) => {
+           if (clickSelectsText(event.currentTarget)) return
+           setShowUnix(current => !current)
+@@ -302,43 +302,43 @@ function StartedAtValue({ timestamp }: { timestamp: number | null }) {
+ }
+ 
+ function totalTime(metrics: AssistantMetricDetail): string {
+-  if (!metrics.timingRecorded) return 'Not recorded'
+-  if (metrics.stepStartTime === null) return 'Step start unavailable'
+-  if (metrics.completedTime === null) return 'Pending'
++  if (!metrics.timingRecorded) return '未记录'
++  if (metrics.stepStartTime === null) return '步骤开始时间不可用'
++  if (metrics.completedTime === null) return '进行中'
+   return formatDurationMs(Math.max(0, metrics.completedTime - metrics.stepStartTime))
+ }
+ 
+ function ttft(metrics: AssistantMetricDetail): string {
+-  if (!metrics.timingRecorded) return 'Not recorded'
+-  if (metrics.stepStartTime === null) return 'Step start unavailable'
+-  if (metrics.firstTokenTime === null) return 'First token unavailable'
++  if (!metrics.timingRecorded) return '未记录'
++  if (metrics.stepStartTime === null) return '步骤开始时间不可用'
++  if (metrics.firstTokenTime === null) return '首 token 时间不可用'
+   return formatDurationMs(Math.max(0, metrics.firstTokenTime - metrics.stepStartTime))
+ }
+ 
+ function generationTime(metrics: AssistantMetricDetail): string {
+-  if (!metrics.timingRecorded || metrics.firstTokenTime === null) return 'First token unavailable'
+-  if (metrics.completedTime === null) return 'Pending'
++  if (!metrics.timingRecorded || metrics.firstTokenTime === null) return '首 token 时间不可用'
++  if (metrics.completedTime === null) return '进行中'
+   return formatDurationMs(Math.max(0, metrics.completedTime - metrics.firstTokenTime))
+ }
+ 
+ function throughput(metrics: AssistantMetricDetail): string {
+-  if (!metrics.usageProvided) return 'Usage unavailable'
+-  if (metrics.outputTokens === null) return 'Output tokens unavailable'
+-  if (!metrics.timingRecorded || metrics.firstTokenTime === null) return 'First token unavailable'
+-  if (metrics.completedTime === null) return 'Pending'
++  if (!metrics.usageProvided) return '用量不可用'
++  if (metrics.outputTokens === null) return '输出 token 不可用'
++  if (!metrics.timingRecorded || metrics.firstTokenTime === null) return '首 token 时间不可用'
++  if (metrics.completedTime === null) return '进行中'
+   const generationSeconds = (metrics.completedTime - metrics.firstTokenTime) / 1_000
+-  if (generationSeconds <= 0) return 'Duration too short'
++  if (generationSeconds <= 0) return '时长过短'
+   return `${(metrics.outputTokens / generationSeconds).toFixed(1)} tok/s`
+ }
+ 
+ function AssistantTimingPanel({ metrics }: { metrics: AssistantMetricDetail }) {
+   return (
+     <dl className={css.overview}>
+-      <div><dt>Started</dt><StartedAtValue timestamp={metrics.stepStartTime} /></div>
+-      <div><dt>Total duration</dt><dd>{totalTime(metrics)}</dd></div>
++      <div><dt>开始</dt><StartedAtValue timestamp={metrics.stepStartTime} /></div>
++      <div><dt>总耗时</dt><dd>{totalTime(metrics)}</dd></div>
+       <div><dt>TTFT</dt><dd>{ttft(metrics)}</dd></div>
+-      <div><dt>Generation</dt><dd>{generationTime(metrics)}</dd></div>
+-      <div><dt>Throughput</dt><dd>{throughput(metrics)}</dd></div>
++      <div><dt>生成</dt><dd>{generationTime(metrics)}</dd></div>
++      <div><dt>吞吐</dt><dd>{throughput(metrics)}</dd></div>
+     </dl>
+   )
+ }
+@@ -486,8 +486,8 @@ function filterRecords(
+ }
+ 
+ function requestStep(group: string): number | undefined {
+-  if (!group.startsWith('Step ')) return undefined
+-  const value = Number(group.slice('Step '.length))
++  if (!group.startsWith('步骤 ')) return undefined
++  const value = Number(group.slice('步骤 '.length))
+   return Number.isInteger(value) && value > 0 ? value : undefined
+ }
+ 
+@@ -511,7 +511,7 @@ function indexRequestBoundaries(records: readonly TableRecord[]): ReadonlyMap<st
+ }
+ 
+ function sectionLabel(turn: number | null): string {
+-  return turn === null ? 'Between turns' : `Turn ${turn}`
++  return turn === null ? '轮次之间' : `轮次 ${turn}`
+ }
+ 
+ function indexRequestNumbers(
+@@ -555,14 +555,14 @@ function summarizeTurn(records: readonly TableRecord[]): string {
+   const steps = new Set(
+     records
+       .map(record => record.group)
+-      .filter(group => group.startsWith('Step ')),
++      .filter(group => group.startsWith('步骤 ')),
+   ).size
+   const toolCalls = records.filter(record =>
+     record.cell.kind === 'tool' || record.cell.kind === 'subtool',
+   ).length
+   return [
+-    `${steps} ${steps === 1 ? 'step' : 'steps'}`,
+-    `${toolCalls} tool ${toolCalls === 1 ? 'call' : 'calls'}`,
++    `${steps} 步`,
++    `${toolCalls} 次工具调用`,
+   ].join(' · ')
+ }
+ 
+@@ -621,7 +621,7 @@ function summarizeAssistantTools(records: readonly TableRecord[]): string {
+     return separator === -1 ? record.cell.text : record.cell.text.slice(0, separator)
+   }).filter(name => name !== ''))]
+   const count = records.length
+-  const summary = `${count} tool ${count === 1 ? 'call' : 'calls'}`
++  const summary = `${count} 次工具调用`
+   return names.length > 0 ? `${summary} · ${names.join(', ')}` : summary
+ }
+ 
+@@ -675,9 +675,9 @@ function stateOf(record: TableRecord): RecordState {
+ }
+ 
+ function statusLabel(state: RecordState): string {
+-  if (state === 'error') return 'Failed'
+-  if (state === 'running') return 'Pending'
+-  return 'Completed'
++  if (state === 'error') return '失败'
++  if (state === 'running') return '进行中'
++  return '已完成'
+ }
+ 
+ function TokenRows({ cell }: { cell: TrajectoryCellProps }) {
+@@ -687,18 +687,18 @@ function TokenRows({ cell }: { cell: TrajectoryCellProps }) {
+   return (
+     <>
+       <div>
+-        <dt>Tokens</dt>
++        <dt>Token</dt>
+         <dd>{cell.output === undefined ? '—' : `${cell.output} tok`}</dd>
+       </div>
+       {cell.think !== undefined && (
+         <div className={css.requestTokenDetail}>
+-          <dt>Reasoning</dt>
++          <dt>推理</dt>
+           <dd>{cell.think} tok</dd>
+         </div>
+       )}
+       {content !== undefined && (
+         <div className={css.requestTokenDetail}>
+-          <dt>Content</dt>
++          <dt>正文</dt>
+           <dd>{content} tok</dd>
+         </div>
+       )}
+@@ -716,7 +716,7 @@ function inputTotal(usage: TrajectoryUsage): number | undefined {
+ }
+ 
+ function UsageRows({ usage }: { usage: TrajectoryUsage | undefined }) {
+-  if (usage === undefined) return <p className={css.noPayload}>Usage not reported</p>
++  if (usage === undefined) return <p className={css.noPayload}>未上报用量</p>
+   const totalInput = inputTotal(usage)
+   const otherOutput = usage.output !== undefined && usage.reasoning !== undefined
+     ? usage.output - usage.reasoning
+@@ -724,38 +724,38 @@ function UsageRows({ usage }: { usage: TrajectoryUsage | undefined }) {
+   return (
+     <dl className={css.overview}>
+       {totalInput !== undefined && (
+-        <div><dt>Input</dt><dd>{totalInput} tok</dd></div>
++        <div><dt>输入</dt><dd>{totalInput} tok</dd></div>
+       )}
+       {usage.cacheRead !== undefined && (
+         <div className={css.requestTokenDetail}>
+-          <dt>Cached</dt>
++          <dt>缓存读取</dt>
+           <dd>{usage.cacheRead} tok</dd>
+         </div>
+       )}
+       {usage.cacheWrite !== undefined && (
+         <div className={css.requestTokenDetail}>
+-          <dt>Cache created</dt>
++          <dt>新建缓存</dt>
+           <dd>{usage.cacheWrite} tok</dd>
+         </div>
+       )}
+       {usage.input !== undefined && (
+         <div className={css.requestTokenDetail}>
+-          <dt>Other</dt>
++          <dt>其他</dt>
+           <dd>{usage.input} tok</dd>
+         </div>
+       )}
+       {usage.output !== undefined && (
+-        <div><dt>Output</dt><dd>{usage.output} tok</dd></div>
++        <div><dt>输出</dt><dd>{usage.output} tok</dd></div>
+       )}
+       {usage.reasoning !== undefined && (
+         <div className={css.requestTokenDetail}>
+-          <dt>Reasoning</dt>
++          <dt>推理</dt>
+           <dd>{usage.reasoning} tok</dd>
+         </div>
+       )}
+       {otherOutput !== undefined && (
+         <div className={css.requestTokenDetail}>
+-          <dt>Content</dt>
++          <dt>正文</dt>
+           <dd>{otherOutput} tok</dd>
+         </div>
+       )}
+@@ -773,11 +773,11 @@ function RequestUsagePanel({
+   return (
+     <div className={css.usagePanel}>
+       <section className={css.usageGroup}>
+-        <h4 className={css.usageHeading}>This request</h4>
++        <h4 className={css.usageHeading}>本次请求</h4>
+         <UsageRows usage={usage} />
+       </section>
+       <section className={css.usageGroup}>
+-        <h4 className={css.usageHeading}>Session cumulative</h4>
++        <h4 className={css.usageHeading}>会话累计</h4>
+         <UsageRows usage={cumulative} />
+       </section>
+     </div>
+@@ -792,12 +792,12 @@ function RequestOptions({
+   preview?: boolean
+ }) {
+   if (options === undefined) {
+-    return <p className={css.noPayload}>Options not recorded</p>
++    return <p className={css.noPayload}>未记录选项</p>
+   }
+   return (
+     <JsonTree
+       data={options}
+-      label="Request options JSON"
++      label="请求选项 JSON"
+       className={preview ? css.jsonPreview : css.jsonPayload}
+     />
+   )
+@@ -805,37 +805,37 @@ function RequestOptions({
+ 
+ function messageSourceLabel(source: unknown): string {
+   if (typeof source !== 'object' || source === null || Array.isArray(source)) {
+-    return 'Unknown'
++    return '未知'
+   }
+   const properties = source as Record<string, unknown>
+   const kind = properties.kind
+-  if (kind === 'user') return 'User'
++  if (kind === 'user') return '用户'
+   if (kind === 'plugin') {
+     const plugin = properties.plugin
+     return typeof plugin === 'string' && plugin !== ''
+-      ? `Plugin · ${plugin}`
+-      : 'Plugin'
++      ? `插件 · ${plugin}`
++      : '插件'
+   }
+   if (kind === 'goal') {
+     const round = properties.round
+     return typeof round === 'number' && round > 0
+-      ? `Goal · Round ${round}`
+-      : 'Goal'
++      ? `目标 · 第 ${round} 轮`
++      : '目标'
+   }
+-  if (typeof kind !== 'string' || kind === '') return 'Unknown'
++  if (typeof kind !== 'string' || kind === '') return '未知'
+   return `${kind[0]?.toUpperCase() ?? ''}${kind.slice(1)}`
+ }
+ 
+ function MessageSource({ record }: { record: TableRecord }) {
+   const source = record.cell.messageSource
+-  if (source === undefined) return <p className={css.noPayload}>Source not recorded</p>
++  if (source === undefined) return <p className={css.noPayload}>未记录来源</p>
+   const data = typeof source === 'object' && source !== null
+     ? source
+     : { value: source }
+   return (
+     <JsonTree
+       data={data}
+-      label="Message source JSON"
++      label="消息来源 JSON"
+       className={css.jsonPayload}
+     />
+   )
+@@ -899,26 +899,26 @@ function detailTabs(record: TableRecord): readonly DetailTabItem[] {
+   }
+   if (record.cell.kind === 'compacted') {
+     return [
+-      { id: 'overview', label: 'Summary' },
+-      { id: 'raw', label: 'Raw Output' },
++      { id: 'overview', label: '摘要' },
++      { id: 'raw', label: '原始输出' },
+     ]
+   }
+   if (isMarkdownRecord(record)) {
+     return [
+-      { id: 'overview', label: 'Summary' },
+-      { id: 'rendered', label: 'Preview' },
+-      { id: 'raw', label: 'Raw' },
++      { id: 'overview', label: '摘要' },
++      { id: 'rendered', label: '预览' },
++      { id: 'raw', label: '原始' },
+       ...(record.cell.messageSource === undefined
+         ? []
+-        : [{ id: 'source', label: 'Source' } as const]),
++        : [{ id: 'source', label: '来源' } as const]),
+     ]
+   }
+   return [
+-    { id: 'overview', label: 'Summary' },
+-    ...(record.cell.inputDetail ? [{ id: 'input', label: 'Payload' } as const] : []),
+-    ...(record.cell.outputDetail ? [{ id: 'output', label: 'Result' } as const] : []),
++    { id: 'overview', label: '摘要' },
++    ...(record.cell.inputDetail ? [{ id: 'input', label: '载荷' } as const] : []),
++    ...(record.cell.outputDetail ? [{ id: 'output', label: '结果' } as const] : []),
+     { id: 'schema', label: 'Schema' },
+-    { id: 'timing', label: 'Timing' },
++    { id: 'timing', label: '计时' },
+   ]
+ }
+ 
+@@ -961,7 +961,7 @@ function isToolCallOnly(cell: TrajectoryCellProps): boolean {
+   return cell.kind === 'message'
+     && !cell.outputDetail
+     && !cell.thinkingDetail
+-    && cell.text === 'Tool call only'
++    && cell.text === '仅工具调用'
+ }
+ 
+ interface RecordPresentationValue {
+@@ -993,7 +993,7 @@ function RecordPresentation({
+   const toolCallOnly = isToolCallOnly(cell)
+   const toolCallText = toolCallTextParts(cell.kind, displayText)
+   const listDisplayText = toolCallOnly
+-    ? '(tool call only)'
++    ? '（仅工具调用）'
+     : toolCallText === undefined
+       ? displayText
+       : [toolCallText.name, toolCallText.args].filter(Boolean).join(' ')
+@@ -1012,7 +1012,7 @@ function RecordListText({
+   toolCallText,
+ }: Pick<RecordPresentationValue, 'displayText' | 'toolCallOnly' | 'toolCallText'>) {
+   if (toolCallOnly) {
+-    return <span className={css.toolCallOnly}>(tool call only)</span>
++    return <span className={css.toolCallOnly}>（仅工具调用）</span>
+   }
+   if (toolCallText === undefined) return displayText || '—'
+   return (
+@@ -1068,14 +1068,14 @@ function SourceBlocks({
+               <button
+                 type="button"
+                 className={css.sourceBlockJumpTarget}
+-                aria-label={`Open Block #${index + 1} tool call summary`}
+-                title="Open tool call summary"
++                aria-label={`打开区块 #${index + 1} 的工具调用摘要`}
++                title="打开工具调用摘要"
+                 onClick={() => {
+                   if (block.callId !== undefined) onOpenCall(block.callId)
+                 }}
+               >
+                 <span className={css.sourceBlockLabel}>
+-                  {`Block #${index + 1} ${block.type}`}
++                  {`区块 #${index + 1} ${block.type}`}
+                 </span>
+                 <IconChevronRightOutline14 className={css.sourceBlockJumpIcon} size={12} />
+               </button>
+@@ -1083,7 +1083,7 @@ function SourceBlocks({
+             : (
+               <div className={css.sourceBlockHeader}>
+                 <span className={css.sourceBlockLabel}>
+-                  {`Block #${index + 1} ${block.type}`}
++                  {`区块 #${index + 1} ${block.type}`}
+                 </span>
+               </div>
+             )}
+@@ -1110,7 +1110,7 @@ function PanelImage({
+       href={block.imageSrc}
+       target="_blank"
+       rel="noopener noreferrer"
+-      title="Open image"
++      title="打开图片"
+     >
+       <img
+         className={css.panelImage}
+@@ -1158,7 +1158,7 @@ function AssistantToolCalls({
+           <button
+             type="button"
+             className={css.assistantToolCallButton}
+-            title="Open tool call summary"
++            title="打开工具调用摘要"
+             onClick={() => {
+               if (call.callId !== undefined) onOpenCall(call.callId)
+             }}
+@@ -1181,7 +1181,7 @@ function AssistantToolCalls({
+             </svg>
+             <span className={css.assistantToolCallText}>
+               <span className={css.assistantToolCallName}>
+-                {call.toolName ?? 'tool-call'}
++                {call.toolName ?? '未知工具'}
+               </span>
+               {call.content !== '' && (
+                 <span className={css.assistantToolCallArgs}>{call.content}</span>
+@@ -1216,7 +1216,7 @@ function ToolGlyph() {
+ }
+ 
+ function ToolCatalog({ tools }: { tools: ConversationPromptSnapshot['tools'] }) {
+-  if (tools.length === 0) return <p className={css.noPayload}>No tools in this request</p>
++  if (tools.length === 0) return <p className={css.noPayload}>本次请求没有工具</p>
+   return (
+     <div className={css.toolCatalog}>
+       {tools.map((tool, index) => (
+@@ -1233,7 +1233,7 @@ function ToolCatalog({ tools }: { tools: ConversationPromptSnapshot['tools'] })
+             )}
+             <JsonTree
+               data={tool.parameters}
+-              label={`${tool.name} parameters JSON`}
++              label={`${tool.name} 参数 JSON`}
+               className={css.toolCatalogTree}
+             />
+           </div>
+@@ -1304,14 +1304,14 @@ function SystemPromptDiff({
+     <div className={css.promptDiffSections}>
+       {before.system !== after.system && (
+         <PromptDiffSection
+-          title="System Prompt"
++          title="系统提示词"
+           before={before.system}
+           after={after.system}
+         />
+       )}
+       {toolsBefore !== toolsAfter && (
+         <PromptDiffSection
+-          title="Tools"
++          title="工具"
+           before={toolsBefore}
+           after={toolsAfter}
+         />
+@@ -1387,7 +1387,7 @@ function MarkdownRecordContent({
+             aria-expanded={thinkingExpanded}
+             onClick={() => { onThinkingExpandedChange(!thinkingExpanded) }}
+           >
+-            Thinking
++            思考过程
+             <IconChevronRightOutline14 className={css.thinkingChevron} size={12} />
+           </button>
+           {thinkingExpanded && (
+@@ -1425,8 +1425,8 @@ function MarkdownRecordContent({
+     && record.cell.sourceBlocks?.some(block => block.type === 'tool-call') === true
+   if (!source && !hasImages && !hasToolCalls) {
+     const emptyLabel = isToolCallOnly(record.cell)
+-      ? 'Tool call only'
+-      : record.cell.text || 'No content'
++      ? '仅工具调用'
++      : record.cell.text || '无内容'
+     return <p className={css.noPayload}>{emptyLabel}</p>
+   }
+   if (!rendered || (!hasImages && !hasToolCalls)) {
+@@ -1452,9 +1452,9 @@ function RecordTiming({ record }: { record: TableRecord }) {
+     ? <AssistantTimingPanel metrics={record.cell.assistantMetrics} />
+     : (
+       <dl className={css.overview}>
+-        <div><dt>Started</dt><StartedAtValue timestamp={record.cell.startedAt ?? null} /></div>
+-        <div><dt>Duration</dt><dd>{formatElapsedSeconds(record.cell.timeSeconds)}</dd></div>
+-        <div><dt>Timing source</dt><dd>{record.cell.timeSeconds === null ? 'Not available' : 'Session timestamps'}</dd></div>
++        <div><dt>开始</dt><StartedAtValue timestamp={record.cell.startedAt ?? null} /></div>
++        <div><dt>耗时</dt><dd>{formatElapsedSeconds(record.cell.timeSeconds)}</dd></div>
++        <div><dt>计时来源</dt><dd>{record.cell.timeSeconds === null ? '不可用' : '会话时间戳'}</dd></div>
+       </dl>
+     )
+ }
+@@ -1475,11 +1475,11 @@ function RequestTiming({
+       : Math.max(0, (request.completedAt - request.startedAt) / 1000)
+     return (
+       <dl className={css.overview}>
+-        <div><dt>Started</dt><StartedAtValue timestamp={request.startedAt} /></div>
+-        <div><dt>Duration</dt><dd>{formatElapsedSeconds(duration)}</dd></div>
++        <div><dt>开始</dt><StartedAtValue timestamp={request.startedAt} /></div>
++        <div><dt>耗时</dt><dd>{formatElapsedSeconds(duration)}</dd></div>
+         <div>
+-          <dt>Timing source</dt>
+-          <dd>{duration === null ? 'Session timestamps (running)' : 'Session timestamps'}</dd>
++          <dt>计时来源</dt>
++          <dd>{duration === null ? '会话时间戳（进行中）' : '会话时间戳'}</dd>
+         </div>
+       </dl>
+     )
+@@ -1487,10 +1487,10 @@ function RequestTiming({
+   return (
+     <dl className={css.overview}>
+       <div>
+-        <dt>Started</dt>
++        <dt>开始</dt>
+         <StartedAtValue timestamp={anchor?.cell.startedAt ?? null} />
+       </div>
+-      <div><dt>Duration</dt><dd>{formatElapsedSeconds(null)}</dd></div>
++      <div><dt>耗时</dt><dd>{formatElapsedSeconds(null)}</dd></div>
+     </dl>
+   )
+ }
+@@ -1506,8 +1506,8 @@ function RecordPayload({
+ }) {
+   const value = direction === 'input' ? record.cell.inputDetail : record.cell.outputDetail
+   const missing = direction === 'input'
+-    ? 'No payload captured'
+-    : 'No result captured'
++    ? '未捕获请求载荷'
++    : '未捕获结果'
+   if (!value) return <p className={css.noPayload}>{missing}</p>
+   const error = direction === 'output' && record.cell.isError === true
+   const payloadClass = preview ? css.jsonPreview : css.jsonPayload
+@@ -1521,7 +1521,7 @@ function RecordPayload({
+     return (
+       <JsonTree
+         data={json}
+-        label="Result JSON"
++        label="结果 JSON"
+         className={payloadClassName}
+       />
+     )
+@@ -1562,7 +1562,7 @@ function RecordPayload({
+     return (
+       <JsonTree
+         data={json}
+-        label={`${direction === 'input' ? 'Payload' : 'Result'} JSON`}
++        label={`${direction === 'input' ? '载荷' : '结果'} JSON`}
+         className={payloadClassName}
+       />
+     )
+@@ -1572,7 +1572,7 @@ function RecordPayload({
+       css.payload,
+       preview ? css.payloadPreview : undefined,
+       error ? css.errorPayload : undefined,
+-      value === 'No output' ? css.noOutputText : undefined,
++      value === '无输出' ? css.noOutputText : undefined,
+     ].filter((value): value is string => value !== undefined).join(' ')}
+     >
+       {value}
+@@ -1588,7 +1588,7 @@ function RecordSchema({
+   preview?: boolean
+ }) {
+   if (!record.cell.schemaDetail) {
+-    return <p className={css.noPayload}>Schema unavailable</p>
++    return <p className={css.noPayload}>Schema 不可用</p>
+   }
+   const schema = parseToolSchema(record.cell.schemaDetail)
+   if (schema !== undefined) {
+@@ -1599,10 +1599,10 @@ function RecordSchema({
+           <p className={css.schemaDescription}>{schema.description}</p>
+         </header>
+         <section className={css.schemaParameters}>
+-          <h4 className={css.schemaParametersTitle}>Parameters</h4>
++          <h4 className={css.schemaParametersTitle}>参数</h4>
+           <JsonTree
+             data={schema.parameters}
+-            label={`${schema.name} parameters JSON`}
++            label={`${schema.name} 参数 JSON`}
+             className={css.schemaTree}
+           />
+         </section>
+@@ -2213,7 +2213,7 @@ export function TrajectoryTable({
+           <div className={css.historyLoading} role="status" aria-live="polite">
+             <span className={css.historyLoadingBar}>
+               <span className={css.historyLoadingSpinner} aria-hidden="true" />
+-              Loading trajectory…
++              正在加载轨迹…
+             </span>
+           </div>
+         )}
+@@ -2239,8 +2239,8 @@ export function TrajectoryTable({
+                     className={css.historyLoadButton}
+                     disabled={olderBusy || onLoadOlder === undefined}
+                     aria-label={olderBusy
+-                      ? 'Loading earlier history…'
+-                      : 'Load earlier history'}
++                      ? '正在加载更早历史…'
++                      : '加载更早历史'}
+                     onClick={() => {
+                       const pane = tablePaneRef.current
+                       if (pane !== null) requestOlder(pane, false)
+@@ -2250,10 +2250,10 @@ export function TrajectoryTable({
+                       <span className={css.historyLoadingSpinner} aria-hidden="true" />
+                     )}
+                     <span aria-hidden="true">
+-                      {olderBusy ? 'Loading earlier history…' : 'Load earlier history'}
++                      {olderBusy ? '正在加载更早历史…' : '加载更早历史'}
+                     </span>
+                     <span className={css.visuallyHidden} role="status" aria-live="polite">
+-                      {olderBusy ? 'Loading earlier history…' : ''}
++                      {olderBusy ? '正在加载更早历史…' : ''}
+                     </span>
+                   </button>
+                 </td>
+@@ -2296,7 +2296,7 @@ export function TrajectoryTable({
+                   }
+                   const requestLabel = request === undefined
+                     ? undefined
+-                    : `Request #${request}${requestInfo?.purpose === 'compaction' ? ' · Compaction' : ''}`
++                    : `请求 #${request}${requestInfo?.purpose === 'compaction' ? ' · 压缩' : ''}`
+                   const requestSelected = request !== undefined
+                 && selectedRequest?.turn === record.turn
+                 && selectedRequest.group === record.group
+@@ -2308,10 +2308,10 @@ export function TrajectoryTable({
+                       tabIndex={isRequestOnly ? -1 : 0}
+                       aria-rowindex={position + 1 + historyRowOffset}
+                       aria-label={isCollapsedSummary
+-                        ? `Collapsed ${record.collapsedSummaryKind} summary, ${record.collapsedSummary}`
++                        ? `已折叠${record.collapsedSummaryKind === 'turn' ? '轮次' : '助手'}摘要，${record.collapsedSummary}`
+                         : isRequestOnly
+-                          ? `Request ${request ?? ''}, compaction`
+-                          : `${request === undefined ? '' : `Request ${request}, `}${KIND_LABEL[record.cell.kind]}, ${listDisplayText || 'no content'}`}
++                          ? `请求 ${request ?? ''}，压缩`
++                          : `${request === undefined ? '' : `请求 ${request}，`}${KIND_LABEL[record.cell.kind]}，${listDisplayText || '无内容'}`}
+                       aria-selected={!isCollapsedSummary && !isRequestOnly && selectedIndex === record.cell.index}
+                       data-kind={record.cell.kind}
+                       data-trajectory-row-key={trajectoryVirtualRecordKey(record)}
+@@ -2498,7 +2498,7 @@ export function TrajectoryTable({
+                                 {resultText !== undefined && (
+                                   <span className={record.cell.isError ? `${css.inlineResult} ${css.error}` : css.inlineResult}>
+                                     <span className={css.arrow}>→</span>
+-                                    <span className={resultText === 'No output'
++                                    <span className={resultText === '无输出'
+                                       ? `${css.inlineResultText} ${css.noOutputText}`
+                                       : css.inlineResultText}
+                                     >
+@@ -2532,17 +2532,17 @@ export function TrajectoryTable({
+         || (selected !== undefined && selectedState !== undefined)) && (
+         <aside
+           className={css.details}
+-          aria-label="Event details"
++          aria-label="事件详情"
+           style={detailsWidth === null ? undefined : { width: detailsWidth }}
+         >
+           <div
+             className={css.detailsResizeHandle}
+             role="separator"
+-            aria-label="Resize event details"
++            aria-label="调整事件详情栏"
+             aria-controls="trajectory-detail-panel"
+             aria-orientation="vertical"
+             tabIndex={0}
+-            title="Drag to resize. Double-click to reset."
++            title="拖动调整大小，双击重置。"
+             onDoubleClick={() => {
+               setDetailsWidth(null)
+               setToolRequestOffset(null)
+@@ -2618,11 +2618,11 @@ export function TrajectoryTable({
+                   <>
+                     <span className={css.requestDetailsDot} aria-hidden="true" />
+                     <span className={css.requestDetailsName}>
+-                      Request #{selectedRequestNumber ?? '—'}
++                      请求 #{selectedRequestNumber ?? '—'}
+                     </span>
+                     <span className={css.detailsLocation}>
+                       {selectedRequestInfo?.purpose === 'compaction'
+-                        ? `Compaction · ${sectionLabel(selectedRequest.turn)}`
++                        ? `压缩 · ${sectionLabel(selectedRequest.turn)}`
+                         : sectionLabel(selectedRequest.turn)}
+                     </span>
+                   </>
+@@ -2630,7 +2630,7 @@ export function TrajectoryTable({
+                 : promptSelected
+                   ? (
+                     <>
+-                      <span className={`${css.kindTag} ${css.systemNeutral}`}>SYSTEM</span>
++                      <span className={`${css.kindTag} ${css.systemNeutral}`}>{KIND_LABEL.system}</span>
+                       <span className={css.detailsLocation}>{selected?.cell.text}</span>
+                     </>
+                   )
+@@ -2663,13 +2663,13 @@ export function TrajectoryTable({
+             <button
+               type="button"
+               className={css.close}
+-              aria-label="Close details"
++              aria-label="关闭详情"
+               onClick={clearInspectorSelection}
+             >
+               <span aria-hidden="true">×</span>
+             </button>
+           </div>
+-          <div className={css.detailTabs} role="tablist" aria-label="Event details">
++          <div className={css.detailTabs} role="tablist" aria-label="事件详情">
+             {selectedTabs.map(tab => (
+               <button
+                 key={tab.id}
+@@ -2702,21 +2702,21 @@ export function TrajectoryTable({
+                   data-summary-scroll-region=""
+                 >
+                   <div>
+-                    <dt>Status</dt>
++                    <dt>状态</dt>
+                     <dd className={selectedRequestState === 'error' ? css.error : undefined}>
+                       {statusLabel(selectedRequestState)}
+                     </dd>
+                   </div>
+                   {selectedRequestInfo?.purpose === 'compaction' && (
+                     <div>
+-                      <dt>Purpose</dt>
+-                      <dd>Compaction</dd>
++                      <dt>用途</dt>
++                      <dd>压缩</dd>
+                     </div>
+                   )}
+                   {(selectedRequestInfo?.provider
+                     ?? selectedRequestInfo?.requestConfig?.provider) !== undefined && (
+                     <div>
+-                      <dt>Provider</dt>
++                      <dt>提供方</dt>
+                       <dd>
+                         {selectedRequestInfo?.provider
+                           ?? selectedRequestInfo?.requestConfig?.provider}
+@@ -2726,7 +2726,7 @@ export function TrajectoryTable({
+                   {(selectedRequestInfo?.model
+                     ?? selectedRequestInfo?.requestConfig?.model) !== undefined && (
+                     <div>
+-                      <dt>Model</dt>
++                      <dt>模型</dt>
+                       <dd>
+                         {selectedRequestInfo?.model
+                           ?? selectedRequestInfo?.requestConfig?.model}
+@@ -2734,35 +2734,35 @@ export function TrajectoryTable({
+                     </div>
+                   )}
+                   <div>
+-                    <dt>Tool calls</dt>
++                    <dt>工具调用</dt>
+                     <dd>{selectedRequestToolCalls}</dd>
+                   </div>
+                   {selectedRequestSubtoolCalls > 0 && (
+                     <div>
+-                      <dt>Subtool calls</dt>
++                      <dt>子工具调用</dt>
+                       <dd>{selectedRequestSubtoolCalls}</dd>
+                     </div>
+                   )}
+                   {selectedRequestInfo?.error !== undefined && (
+                     <div>
+-                      <dt>Error</dt>
++                      <dt>错误</dt>
+                       <dd className={css.error}>{selectedRequestInfo.error}</dd>
+                     </div>
+                   )}
+                   {selectedRequestInfo?.retry !== undefined && (
+                     <div>
+-                      <dt>Retry</dt>
++                      <dt>重试</dt>
+                       <dd>
+-                        Scheduled {selectedRequestInfo.retry}
++                        第 {selectedRequestInfo.retry} 次
+                         {selectedRequestInfo.maxRetries === undefined
+                           ? ''
+-                          : ` of ${selectedRequestInfo.maxRetries}`}
++                          : `（共 ${selectedRequestInfo.maxRetries} 次）`}
+                       </dd>
+                     </div>
+                   )}
+                   {selectedRequestInfo?.retryDelayMs !== undefined && (
+                     <div>
+-                      <dt>Retry delay</dt>
++                      <dt>重试延迟</dt>
+                       <dd>{formatDurationMs(selectedRequestInfo.retryDelayMs)}</dd>
+                     </div>
+                   )}
+@@ -2779,8 +2779,8 @@ export function TrajectoryTable({
+                         >
+                           <span>
+                             {selectedRequestInfo?.purpose === 'compaction'
+-                              ? 'Compacted'
+-                              : 'Assistant Message'}
++                              ? '已压缩'
++                              : '助手消息'}
+                           </span>
+                           <IconChevronRightOutline14
+                             className={css.overviewHierarchyJumpIconTight}
+@@ -2793,14 +2793,14 @@ export function TrajectoryTable({
+                 </dl>
+                 <div className={css.overviewSections}>
+                   {selectedRequestOptions !== undefined && (
+-                    <OverviewSection label="Options" onOpen={() => { activateTab('options') }}>
++                    <OverviewSection label="选项" onOpen={() => { activateTab('options') }}>
+                       <RequestOptions options={selectedRequestOptions} preview />
+                     </OverviewSection>
+                   )}
+-                  <OverviewSection label="Usage" onOpen={() => { activateTab('usage') }}>
++                  <OverviewSection label="用量" onOpen={() => { activateTab('usage') }}>
+                     <UsageRows usage={selectedRequestUsage} />
+                   </OverviewSection>
+-                  <OverviewSection label="Timing" onOpen={() => { activateTab('timing') }}>
++                  <OverviewSection label="计时" onOpen={() => { activateTab('timing') }}>
+                     <RequestTiming
+                       assistant={selectedRequestAssistant}
+                       anchor={selectedRequestAnchor}
+@@ -2836,7 +2836,7 @@ export function TrajectoryTable({
+             )}
+             {promptSelected && activeTab === 'system-prompt' && (
+               selectedPrompt.system === ''
+-                ? <p className={css.noPayload}>No system prompt in this request</p>
++                ? <p className={css.noPayload}>本次请求没有系统提示词</p>
+                 : (
+                   <div className={`${css.markdownPayload} ${css.systemPrompt}`}>
+                     <MarkdownText text={selectedPrompt.system} />
+@@ -2856,17 +2856,17 @@ export function TrajectoryTable({
+                   data-summary-scroll-region=""
+                 >
+                   <div>
+-                    <dt>Status</dt>
++                    <dt>状态</dt>
+                     <dd className={selectedState === 'error' ? css.error : undefined}>
+                       {statusLabel(selectedState)}
+                     </dd>
+                   </div>
+                   <div>
+-                    <dt>Duration</dt>
++                    <dt>耗时</dt>
+                     <dd>{formatElapsedSeconds(selected.cell.timeSeconds)}</dd>
+                   </div>
+                   <div>
+-                    <dt>Tokens</dt>
++                    <dt>Token</dt>
+                     <dd>—</dd>
+                   </div>
+                 </dl>
+@@ -2898,7 +2898,7 @@ export function TrajectoryTable({
+                 >
+                   {selected.cell.messageSource !== undefined && (
+                     <div>
+-                      <dt>Source</dt>
++                      <dt>来源</dt>
+                       <dd className={css.overviewParentLinks}>
+                         <button
+                           type="button"
+@@ -2918,8 +2918,8 @@ export function TrajectoryTable({
+                     <div>
+                       <dt>
+                         {selectedAssistantRequestTarget !== undefined
+-                          ? 'Source'
+-                          : 'Hierarchy'}
++                          ? '来源'
++                          : '层级'}
+                       </dt>
+                       <dd className={css.overviewParentLinks}>
+                         {selectedAssistantRequestTarget !== undefined && (
+@@ -2930,7 +2930,7 @@ export function TrajectoryTable({
+                               selectRequest(selectedAssistantRequestTarget)
+                             }}
+                           >
+-                            <span>Request #{selectedAssistantRequest ?? '—'}</span>
++                            <span>请求 #{selectedAssistantRequest ?? '—'}</span>
+                             <IconChevronRightOutline14
+                               className={css.overviewHierarchyJumpIconTight}
+                               size={11}
+@@ -2943,7 +2943,7 @@ export function TrajectoryTable({
+                             className={css.overviewHierarchyNavLink}
+                             onClick={() => { openRecordSummary(selectedParentMessage) }}
+                           >
+-                            <span>Assistant Message</span>
++                            <span>助手消息</span>
+                             <IconChevronRightOutline14
+                               className={css.overviewHierarchyJumpIconTight}
+                               size={11}
+@@ -2956,7 +2956,7 @@ export function TrajectoryTable({
+                             className={css.overviewHierarchyNavLink}
+                             onClick={() => { openRecordSummary(selectedParentTool) }}
+                           >
+-                            <span>Tool Call</span>
++                            <span>工具调用</span>
+                             <IconChevronRightOutline14
+                               className={css.overviewHierarchyJumpIconTight}
+                               size={11}
+@@ -2967,7 +2967,7 @@ export function TrajectoryTable({
+                     </div>
+                   )}
+                   <div>
+-                    <dt>Status</dt>
++                    <dt>状态</dt>
+                     <dd className={selectedState === 'error' ? css.error : undefined}>
+                       {statusLabel(selectedState)}
+                     </dd>
+@@ -2977,7 +2977,7 @@ export function TrajectoryTable({
+                   )}
+                   {(selected.cell.kind === 'user' || selected.cell.kind === 'context') && (
+                     <div>
+-                      <dt>Duration</dt>
++                      <dt>耗时</dt>
+                       <dd>{formatElapsedSeconds(selected.cell.timeSeconds)}</dd>
+                     </div>
+                   )}
+@@ -2986,7 +2986,7 @@ export function TrajectoryTable({
+                   {isMarkdownRecord(selected)
+                     ? (
+                       <>
+-                        <OverviewSection label="Preview" onOpen={() => { activateTab('rendered') }}>
++                        <OverviewSection label="预览" onOpen={() => { activateTab('rendered') }}>
+                           <MarkdownRecordContent
+                             record={selected}
+                             rendered
+@@ -3001,12 +3001,12 @@ export function TrajectoryTable({
+                     : (
+                       <>
+                         {selected.cell.inputDetail && (
+-                          <OverviewSection label="Payload" onOpen={() => { activateTab('input') }}>
++                          <OverviewSection label="载荷" onOpen={() => { activateTab('input') }}>
+                             <RecordPayload record={selected} direction="input" preview />
+                           </OverviewSection>
+                         )}
+                         {selected.cell.outputDetail && (
+-                          <OverviewSection label="Result" onOpen={() => { activateTab('output') }}>
++                          <OverviewSection label="结果" onOpen={() => { activateTab('output') }}>
+                             <RecordPayload record={selected} direction="output" preview />
+                           </OverviewSection>
+                         )}
+@@ -3017,7 +3017,7 @@ export function TrajectoryTable({
+                     )}
+                   {selectedAssistantRequestTarget !== undefined && (
+                     <OverviewSection
+-                      label="Request Timing"
++                      label="请求计时"
+                       onOpen={() => {
+                         selectRequest(selectedAssistantRequestTarget, 'timing')
+                       }}
+@@ -3026,7 +3026,7 @@ export function TrajectoryTable({
+                     </OverviewSection>
+                   )}
+                   {(selected.cell.kind === 'tool' || selected.cell.kind === 'subtool') && (
+-                    <OverviewSection label="Timing" onOpen={() => { activateTab('timing') }}>
++                    <OverviewSection label="计时" onOpen={() => { activateTab('timing') }}>
+                       <RecordTiming record={selected} />
+                     </OverviewSection>
+                   )}
+diff --git a/packages/client/ui-trajectory/src/client/TrajectoryTimeline.tsx b/packages/client/ui-trajectory/src/client/TrajectoryTimeline.tsx
+index b1448b8..6f13212 100644
+--- a/packages/client/ui-trajectory/src/client/TrajectoryTimeline.tsx
++++ b/packages/client/ui-trajectory/src/client/TrajectoryTimeline.tsx
+@@ -83,13 +83,13 @@ function timelineRecordDetail(cell: TrajectoryCellProps): TimelineRecordDetail {
+ 
+ function timelineKindLabel(kind: TrajectoryCellKind): string {
+   switch (kind) {
+-    case 'system': return 'SYSTEM'
+-    case 'user': return 'USER'
+-    case 'context': return 'CONTEXT'
+-    case 'compacted': return 'COMPACTED'
+-    case 'message': return 'ASSISTANT'
+-    case 'tool': return 'TOOL'
+-    case 'subtool': return 'SUBTOOL'
++    case 'system': return '系统'
++    case 'user': return '用户'
++    case 'context': return '上下文'
++    case 'compacted': return '已压缩'
++    case 'message': return '助手'
++    case 'tool': return '工具'
++    case 'subtool': return '子工具'
+   }
+ }
+ 
+@@ -110,17 +110,17 @@ function timelineTooltipLabel(
+   if (detail === undefined) return heading
+   const duration = detail.durationMs === undefined
+     ? null
+-    : `Total ${formatTimelineOffset(detail.durationMs)}`
++    : `总耗时 ${formatTimelineOffset(detail.durationMs)}`
+   const range = detail.startedAt === undefined
+     ? null
+     : detail.durationMs === undefined
+-      ? `Started ${formatRecordedTime(detail.startedAt)}`
++      ? `开始于 ${formatRecordedTime(detail.startedAt)}`
+       : `${formatRecordedTime(detail.startedAt)} → ${formatRecordedTime(
+         detail.startedAt + detail.durationMs,
+       )}`
+   const segments = detail.ttftMs === undefined || detail.decodingMs === undefined
+     ? null
+-    : `TTFT ${formatTimelineOffset(detail.ttftMs)} · Decoding ${formatTimelineOffset(
++    : `TTFT ${formatTimelineOffset(detail.ttftMs)} · 解码 ${formatTimelineOffset(
+       detail.decodingMs,
+     )}`
+   const timing = [duration, segments].filter(value => value !== null).join(' · ')
+@@ -188,9 +188,9 @@ function rangeFraction(
+ function LaneLabels() {
+   return (
+     <div className={css.labels} aria-hidden="true">
+-      <span>Input</span>
+-      <span>Model</span>
+-      <span>Tools</span>
++      <span>输入</span>
++      <span>模型</span>
++      <span>工具</span>
+     </div>
+   )
+ }
+@@ -206,7 +206,7 @@ function EarlierHistoryBoundary({
+ }) {
+   return (
+     <Tooltip
+-      label={loading ? 'Loading earlier history…' : 'Click to load earlier history'}
++      label={loading ? '正在加载更早历史…' : '点击加载更早历史'}
+       side="right"
+       delayMs={TIMELINE_TOOLTIP_DELAY_MS}
+     >
+@@ -215,7 +215,7 @@ function EarlierHistoryBoundary({
+         className={css.earlierHistory}
+         data-earlier-history
+         data-loading={loading || undefined}
+-        aria-label={loading ? 'Loading earlier history' : 'Load earlier history'}
++        aria-label={loading ? '正在加载更早历史' : '加载更早历史'}
+         aria-disabled={loading || onLoad === undefined}
+         onClick={onLoad}
+         onPointerEnter={(event) => {
+@@ -380,11 +380,11 @@ export const TrajectoryTimeline = memo(function TrajectoryTimeline({
+ 
+   if (model === null) {
+     return (
+-      <section ref={rootRef} className={css.root} aria-label="Trajectory timeline">
++      <section ref={rootRef} className={css.root} aria-label="轨迹时间线">
+         <div className={css.plot}>
+           <LaneLabels />
+           <div className={css.track}>
+-            <span className={css.empty}>No timing data</span>
++            <span className={css.empty}>暂无计时数据</span>
+             {hasEarlierRecords && (
+               <EarlierHistoryBoundary
+                 loading={loadingEarlier}
+@@ -575,14 +575,14 @@ export const TrajectoryTimeline = memo(function TrajectoryTimeline({
+   }
+ 
+   return (
+-    <section ref={rootRef} className={css.root} aria-label="Trajectory timeline">
++    <section ref={rootRef} className={css.root} aria-label="轨迹时间线">
+       <div className={css.plot}>
+         <LaneLabels />
+         <div
+           ref={trackRef}
+           className={css.track}
+           data-panning={panning || undefined}
+-          aria-label="Timeline overview; drag horizontally to focus events"
++          aria-label="时间线总览；水平拖动以聚焦事件"
+           tabIndex={0}
+           onKeyDown={onKeyDown}
+           onPointerDown={onPointerDown}
+diff --git a/packages/client/ui-trajectory/src/client/TrajectoryTurnHeader.tsx b/packages/client/ui-trajectory/src/client/TrajectoryTurnHeader.tsx
+index c37fbbd..bf9116b 100644
+--- a/packages/client/ui-trajectory/src/client/TrajectoryTurnHeader.tsx
++++ b/packages/client/ui-trajectory/src/client/TrajectoryTurnHeader.tsx
+@@ -2,10 +2,10 @@
+ 
+ import css from './TrajectoryTurnHeader.module.css'
+ 
+-const COLUMN_LABELS = ['Input', 'Output', 'Think', 'Time'] as const
++const COLUMN_LABELS = ['输入', '输出', '思考', '耗时'] as const
+ 
+ export interface TrajectoryTurnHeaderProps {
+-  /** 1-based turn index shown as `Turn N`. */
++  /** 1-based turn index shown as `轮次 N`. */
+   turn: number
+ }
+ 
+@@ -18,7 +18,7 @@ export function TrajectoryTurnHeader({ turn }: TrajectoryTurnHeaderProps) {
+   return (
+     <div className={css.root}>
+       <div className={css.inner}>
+-        <span className={css.title}>Turn {turn}</span>
++        <span className={css.title}>轮次 {turn}</span>
+         <div className={css.columns} aria-hidden="true">
+           {COLUMN_LABELS.map(label => (
+             <span key={label} className={css.column}>{label}</span>
+diff --git a/packages/client/ui-trajectory/src/client/TrajectoryView.tsx b/packages/client/ui-trajectory/src/client/TrajectoryView.tsx
+index 3672707..147dd4e 100644
+--- a/packages/client/ui-trajectory/src/client/TrajectoryView.tsx
++++ b/packages/client/ui-trajectory/src/client/TrajectoryView.tsx
+@@ -201,7 +201,7 @@ export function TrajectoryView({
+           seq: entry.seq,
+           turn,
+           step,
+-          group: `Step ${step}`,
++          group: `步骤 ${step}`,
+           number: index + 1,
+           ...(request?.status === undefined ? {} : { status: request.status }),
+           ...(request?.startedAt === undefined ? {} : { startedAt: request.startedAt }),
+@@ -226,7 +226,7 @@ export function TrajectoryView({
+         seq: request.startSeq,
+         turn: request.turn,
+         step: 0,
+-        group: `Compaction ${request.startSeq}`,
++        group: `压缩 ${request.startSeq}`,
+         number: index + 1,
+         purpose: 'compaction',
+         status: request.status,
+diff --git a/packages/client/ui-trajectory/src/client/layout.ts b/packages/client/ui-trajectory/src/client/layout.ts
+index 265d5ba..e980269 100644
+--- a/packages/client/ui-trajectory/src/client/layout.ts
++++ b/packages/client/ui-trajectory/src/client/layout.ts
+@@ -171,16 +171,16 @@ export function deriveTrajectoryLayout(input: TrajectoryLayoutInput): readonly T
+   const pushMessage = (turn: number, laid: LaidCell) => {
+     const groups = bucket(turn).groups
+     const last = groups.at(-1)
+-    if (last?.title === 'Message') {
++    if (last?.title === '消息') {
+       last.laid.push(laid)
+       return
+     }
+-    groups.push({ title: 'Message', laid: [laid] })
++    groups.push({ title: '消息', laid: [laid] })
+   }
+   const pushStep = (turn: number, step: number, laid: readonly LaidCell[]) => {
+     if (laid.length === 0) return
+     const groups = bucket(turn).groups
+-    const title = `Step ${step}`
++    const title = `步骤 ${step}`
+     const existing = groups.find(group => group.title === title)
+     if (existing !== undefined) {
+       existing.laid.push(...laid)
+@@ -191,7 +191,7 @@ export function deriveTrajectoryLayout(input: TrajectoryLayoutInput): readonly T
+   const pushStepInput = (turn: number, step: number, laid: readonly LaidCell[]) => {
+     if (laid.length === 0) return
+     const groups = bucket(turn).groups
+-    const title = `Step ${step}`
++    const title = `步骤 ${step}`
+     const existing = groups.find(group => group.title === title)
+     if (existing === undefined) {
+       groups.push({ title, laid: [...laid] })
+@@ -309,11 +309,11 @@ export function deriveTrajectoryLayout(input: TrajectoryLayoutInput): readonly T
+         index: ++index,
+         kind: 'compacted',
+         text: request.status === 'running'
+-          ? 'Compacting context…'
++          ? '正在压缩上下文…'
+           : request.status === 'error'
+-            ? request.error ?? 'Compaction failed'
++            ? request.error ?? '压缩失败'
+             : request.summary === undefined
+-              ? 'Context compacted'
++              ? '上下文已压缩'
+               : '',
+         ...(request.status === 'complete' && request.summary !== undefined
+           ? previewContentProperty(request.summary)
+@@ -338,7 +338,7 @@ export function deriveTrajectoryLayout(input: TrajectoryLayoutInput): readonly T
+       attachUsage(cell, request.usage as UsageLike | undefined)
+       const compaction: TurnBucket = {
+         groups: [{
+-          title: `Compaction ${request.startSeq}`,
++          title: `压缩 ${request.startSeq}`,
+           laid: [{
+             absTime: finiteTime(request.startedAt),
+             cell,
+@@ -763,16 +763,16 @@ function summarizeAssistantActivity(blocks: readonly AssistantBlock[]): string {
+     tools.set(block.name, (tools.get(block.name) ?? 0) + 1)
+   }
+   if (tools.size > 0) {
+-    return 'Tool call only'
++    return '仅工具调用'
+   }
+   return ''
+ }
+ 
+ function promptChangeLabel(change: RequestPromptChange): string {
+-  if (change.kind === 'initial') return 'Initial System Prompt'
+-  if (change.kind === 'system') return 'System Prompt Updated'
+-  if (change.kind === 'tools') return 'Tools Updated'
+-  return 'System Prompt and Tools Updated'
++  if (change.kind === 'initial') return '初始系统提示词'
++  if (change.kind === 'system') return '系统提示词已更新'
++  if (change.kind === 'tools') return '工具已更新'
++  return '系统提示词与工具已更新'
+ }
+ 
+ function assistantSourceBlock(block: AssistantBlock): TrajectorySourceBlock {
+@@ -1055,14 +1055,14 @@ function summarizeResult(
+   node: ToolResultNode,
+ ): Pick<TrajectoryCellProps, 'result' | 'resultPreviewMarkdown'> {
+   if (node.isError) {
+-    return { result: node.error?.code ?? 'error' }
++    return { result: node.error?.code ?? '错误' }
+   }
+   for (const block of node.content) {
+     if (block.type === 'text' && typeof block.text === 'string' && block.text !== '') {
+       return { result: '', resultPreviewMarkdown: block.text }
+     }
+   }
+-  return { result: 'No output' }
++  return { result: '无输出' }
+ }
+ 
+ function resultAsText(
+@@ -1079,7 +1079,7 @@ function resultAsText(
+ function detailResult(node: ToolResultNode): string {
+   if (node.isError) {
+     return node.error === undefined
+-      ? 'error'
++      ? '错误'
+       : `${node.error.name}: ${node.error.code}`
+   }
+   const text = node.content
+@@ -1091,7 +1091,7 @@ function detailResult(node: ToolResultNode): string {
+     node.content.length === 0
+     || node.content.every(block =>
+       block.type === 'text' && (typeof block.text !== 'string' || block.text === ''))
+-  ) return 'No output'
++  ) return '无输出'
+   return JSON.stringify(node.content, null, 2)
+ }
+ 
+diff --git a/packages/client/ui-trajectory/src/client/locales.ts b/packages/client/ui-trajectory/src/client/locales.ts
+index f8adbde..73e67d3 100644
+--- a/packages/client/ui-trajectory/src/client/locales.ts
++++ b/packages/client/ui-trajectory/src/client/locales.ts
+@@ -31,16 +31,16 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
+ export const zh: Record<TrajectoryKey, string> = {
+   'view.trajectory': '轨迹',
+   'toolbar.aria': '轨迹工具栏',
+-  'toolbar.duration': 'Duration',
+-  'toolbar.useActualDuration': 'Use actual duration',
+-  'toolbar.useEqualWidth': 'Use equal-width operations',
++  'toolbar.duration': '耗时',
++  'toolbar.useActualDuration': '按实际耗时',
++  'toolbar.useEqualWidth': '按等宽排列操作',
+   'toolbar.actualTime': '实际时间',
+-  'toolbar.turns': 'Turns',
+-  'toolbar.expandTurns': 'Expand turns',
+-  'toolbar.collapseTurns': 'Collapse turns',
+-  'toolbar.calls': 'Calls',
+-  'toolbar.expandCalls': 'Expand calls',
+-  'toolbar.collapseCalls': 'Collapse calls',
++  'toolbar.turns': '轮次',
++  'toolbar.expandTurns': '展开轮次',
++  'toolbar.collapseTurns': '收起轮次',
++  'toolbar.calls': '调用',
++  'toolbar.expandCalls': '展开调用',
++  'toolbar.collapseCalls': '收起调用',
+   'toolbar.search': '搜索轨迹',
+   'toolbar.searchPlaceholder': '搜索',
+ }
+diff --git a/packages/client/ui-trajectory/src/client/trajectory-search-index.ts b/packages/client/ui-trajectory/src/client/trajectory-search-index.ts
+index 93dddb6..5d62f21 100644
+--- a/packages/client/ui-trajectory/src/client/trajectory-search-index.ts
++++ b/packages/client/ui-trajectory/src/client/trajectory-search-index.ts
+@@ -46,7 +46,7 @@ function recordSources(
+     ...(cell.outputBlocks ?? []),
+   ]
+   return [
+-    turn === null ? 'between turns' : `turn ${turn}`,
++    turn === null ? '轮次之间' : `轮次 ${turn}`,
+     group,
+     cell.kind,
+     cell.kind === 'message' ? 'assistant' : '',
+diff --git a/packages/client/ui-trajectory/src/client/trajectory-snapshot-builder.ts b/packages/client/ui-trajectory/src/client/trajectory-snapshot-builder.ts
+index 8ca382b..044ca38 100644
+--- a/packages/client/ui-trajectory/src/client/trajectory-snapshot-builder.ts
++++ b/packages/client/ui-trajectory/src/client/trajectory-snapshot-builder.ts
+@@ -106,7 +106,7 @@ function interruptCompactions(
+       ...request,
+       completedAt: boundary.time,
+       status: 'error',
+-      error: 'Compaction was interrupted before completion.',
++      error: '压缩在完成前被中断。',
+     }
+   }
+ }
+diff --git a/packages/client/ui-trajectory/tests/cell.client.spec.tsx b/packages/client/ui-trajectory/tests/cell.client.spec.tsx
+index 2e7c0dd..7d3e41a 100644
+--- a/packages/client/ui-trajectory/tests/cell.client.spec.tsx
++++ b/packages/client/ui-trajectory/tests/cell.client.spec.tsx
+@@ -52,7 +52,7 @@ describe('TrajectoryCell', () => {
+       />,
+     )
+     expect(screen.getByText('#6')).toBeTruthy()
+-    expect(screen.getByText('Tool')).toBeTruthy()
++    expect(screen.getByText('工具')).toBeTruthy()
+     expect(screen.getByText('bash · Read src/index.ts')).toBeTruthy()
+     expect(screen.getByText('5,000 ms')).toBeTruthy()
+   })
+@@ -69,7 +69,7 @@ describe('TrajectoryCell', () => {
+         think={155}
+       />,
+     )
+-    expect(screen.getByText('Message')).toBeTruthy()
++    expect(screen.getByText('消息')).toBeTruthy()
+     expect(screen.getByText('136')).toBeTruthy()
+     expect(screen.getByText('381')).toBeTruthy()
+     expect(screen.getByText('155')).toBeTruthy()
+@@ -88,8 +88,8 @@ describe('TrajectoryCell', () => {
+   })
+ 
+   it.each([
+-    ['user', 'User'],
+-    ['tool', 'Tool'],
++    ['user', '用户'],
++    ['tool', '工具'],
+   ] as const)('kind %s shows the %s tag and no metric columns', (kind: TrajectoryCellKind, label: string) => {
+     const { container } = render(
+       <TrajectoryCell index={1} kind={kind} text="summary" timeSeconds={kind === 'user' ? 0 : null} input={1} output={2} think={3} />,
+diff --git a/packages/client/ui-trajectory/tests/layout.client.spec.tsx b/packages/client/ui-trajectory/tests/layout.client.spec.tsx
+index ec89245..158f55b 100644
+--- a/packages/client/ui-trajectory/tests/layout.client.spec.tsx
++++ b/packages/client/ui-trajectory/tests/layout.client.spec.tsx
+@@ -20,24 +20,24 @@ afterEach(cleanup)
+ describe('TrajectoryTurnHeader', () => {
+   it('renders Turn N and the four metric column labels', () => {
+     render(<TrajectoryTurnHeader turn={1} />)
+-    expect(screen.getByText('Turn 1')).toBeTruthy()
+-    expect(screen.getByText('Input')).toBeTruthy()
+-    expect(screen.getByText('Output')).toBeTruthy()
+-    expect(screen.getByText('Think')).toBeTruthy()
+-    expect(screen.getByText('Time')).toBeTruthy()
++    expect(screen.getByText('轮次 1')).toBeTruthy()
++    expect(screen.getByText('输入')).toBeTruthy()
++    expect(screen.getByText('输出')).toBeTruthy()
++    expect(screen.getByText('思考')).toBeTruthy()
++    expect(screen.getByText('耗时')).toBeTruthy()
+   })
+ })
+ 
+ describe('TrajectoryGroupHeader', () => {
+   it('renders title and optional description', () => {
+-    render(<TrajectoryGroupHeader title="Step 1" description="2.2s skill" />)
+-    expect(screen.getByText('Step 1')).toBeTruthy()
++    render(<TrajectoryGroupHeader title="步骤 1" description="2.2s skill" />)
++    expect(screen.getByText('步骤 1')).toBeTruthy()
+     expect(screen.getByText('2.2s skill')).toBeTruthy()
+   })
+ 
+   it('omits the description node when absent', () => {
+-    const { container } = render(<TrajectoryGroupHeader title="Message" />)
+-    expect(screen.getByText('Message')).toBeTruthy()
++    const { container } = render(<TrajectoryGroupHeader title="消息" />)
++    expect(screen.getByText('消息')).toBeTruthy()
+     expect(container.querySelectorAll('span')).toHaveLength(1)
+   })
+ })
+@@ -46,11 +46,11 @@ describe('TrajectoryTurn', () => {
+   it('wraps a sticky header and body children', () => {
+     render(
+       <TrajectoryTurn turn={3}>
+-        <TrajectoryGroupHeader title="Message" description="49s" />
++        <TrajectoryGroupHeader title="消息" description="49s" />
+       </TrajectoryTurn>,
+     )
+-    expect(screen.getByText('Turn 3')).toBeTruthy()
+-    expect(screen.getByText('Message')).toBeTruthy()
++    expect(screen.getByText('轮次 3')).toBeTruthy()
++    expect(screen.getByText('消息')).toBeTruthy()
+     expect(screen.getByText('49s')).toBeTruthy()
+   })
+ })
+@@ -100,7 +100,7 @@ describe('deriveTrajectoryLayout', () => {
+         turn: 1, step: 2, time: 9_000, callView: null, subCalls: [],
+       }],
+     })
+-    expect(turns[0]?.groups.map(g => g.title)).toEqual(['Step 2'])
++    expect(turns[0]?.groups.map(g => g.title)).toEqual(['步骤 2'])
+     expect(turns[0]?.groups[0]?.cells[0]).toMatchObject({
+       kind: 'tool',
+       text: 'bash',
+@@ -187,7 +187,7 @@ describe('deriveTrajectoryLayout', () => {
+     const turns = deriveTrajectoryLayout({ nodes, partial: null, runningCalls: [] })
+     const cells = turns[0]?.groups.flatMap(g => g.cells) ?? []
+     expect(cells.find(c => c.kind === 'message')?.timeSeconds).toBeNull()
+-    expect(turns[0]?.groups.find(g => g.title === 'Step 1')?.description).toBeUndefined()
++    expect(turns[0]?.groups.find(g => g.title === '步骤 1')?.description).toBeUndefined()
+   })
+ 
+   it('builds a wall-span step description with a tool histogram', () => {
+@@ -274,7 +274,7 @@ describe('deriveTrajectoryLayout', () => {
+ 
+     expect(turns).toHaveLength(1)
+     expect(turns[0]?.groups.map(group => group.title)).toEqual([
+-      'Message', 'Step 1', 'Step 2',
++      '消息', '步骤 1', '步骤 2',
+     ])
+     expect(turns[0]?.groups[2]?.cells).toMatchObject([
+       { kind: 'user', previewMarkdown: 'change direction', sourceSeq: 3 },
+@@ -336,7 +336,7 @@ describe('deriveTrajectoryLayout', () => {
+     expect(turns[0]).toMatchObject({
+       turn: 2,
+       groups: [{
+-        title: 'Step 3',
++        title: '步骤 3',
+         cells: [
+           { kind: 'user', previewMarkdown: 'change direction' },
+           { kind: 'message', previewMarkdown: 'continued' },
+@@ -378,7 +378,7 @@ describe('deriveTrajectoryLayout', () => {
+ 
+     expect(turns.map(turn => turn.turn)).toEqual([1, null, 2])
+     expect(turns[1]?.groups).toMatchObject([{
+-      title: 'Compaction 3',
++      title: '压缩 3',
+       cells: [{
+         kind: 'compacted',
+         sourceSeq: 3,
+@@ -510,7 +510,7 @@ describe('run_code sub-dispatch cells', () => {
+     const turns = deriveTrajectoryLayout({ nodes: withSubCalls(subCalls), partial: null, runningCalls: [] })
+     const cells = turns[0]!.groups.flatMap(g => g.cells)
+     expect(cells.map(c => c.kind)).toEqual(['message', 'tool', 'subtool', 'subtool'])
+-    expect(cells[0]?.text).toBe('Tool call only')
++    expect(cells[0]?.text).toBe('仅工具调用')
+     // Sequential indexes across the interleave; durations from the pair times.
+     expect(cells.map(c => c.index)).toEqual([1, 2, 3, 4])
+     expect(cells[2]).toMatchObject({
+diff --git a/packages/client/ui-trajectory/tests/table.client.spec.tsx b/packages/client/ui-trajectory/tests/table.client.spec.tsx
+index 467da80..7f11058 100644
+--- a/packages/client/ui-trajectory/tests/table.client.spec.tsx
++++ b/packages/client/ui-trajectory/tests/table.client.spec.tsx
+@@ -15,7 +15,7 @@ afterEach(() => {
+ const TURNS: readonly TrajectoryTurnModel[] = [{
+   turn: 1,
+   groups: [{
+-    title: 'Step 1',
++    title: '步骤 1',
+     description: '1.5s bash×2',
+     cells: [
+       {
+@@ -69,11 +69,11 @@ describe('TrajectoryTable', () => {
+     const turns: readonly TrajectoryTurnModel[] = [{
+       turn: 1,
+       groups: [{
+-        title: 'Step 1',
++        title: '步骤 1',
+         cells: [{
+           index: 1,
+           kind: 'message',
+-          text: 'Tool call only',
++          text: '仅工具调用',
+           sourceBlocks: [{
+             type: 'tool-call', content: '{}', callId: 'call-1', toolName: 'read',
+           }],
+@@ -84,13 +84,13 @@ describe('TrajectoryTable', () => {
+ 
+     render(<TrajectoryTable turns={turns} {...FOLD_PROPS} />)
+ 
+-    expect(screen.getByText('(tool call only)')).toBeTruthy()
++    expect(screen.getByText('（仅工具调用）')).toBeTruthy()
+   })
+ 
+   it('shows assistant timing facts after keyboard selection', () => {
+     render(<TrajectoryTable turns={TURNS} {...FOLD_PROPS} />)
+-    fireEvent.keyDown(screen.getByRole('row', { name: /ASSISTANT/ }), { key: 'Enter' })
+-    fireEvent.click(screen.getByRole('button', { name: 'Request Timing' }))
++    fireEvent.keyDown(screen.getByRole('row', { name: /助手/ }), { key: 'Enter' })
++    fireEvent.click(screen.getByRole('button', { name: '请求计时' }))
+ 
+     expect(screen.getByText('500 ms')).toBeTruthy()
+     expect(screen.getByText('1.00 s')).toBeTruthy()
+@@ -101,7 +101,7 @@ describe('TrajectoryTable', () => {
+     const turns: readonly TrajectoryTurnModel[] = [{
+       turn: 1,
+       groups: [{
+-        title: 'Step 1',
++        title: '步骤 1',
+         cells: [{
+           index: 1,
+           kind: 'tool',
+@@ -113,31 +113,31 @@ describe('TrajectoryTable', () => {
+     }]
+ 
+     render(<TrajectoryTable turns={turns} {...FOLD_PROPS} />)
+-    fireEvent.click(screen.getByRole('row', { name: /TOOL/ }))
++    fireEvent.click(screen.getByRole('row', { name: /工具/ }))
+ 
+     expect(screen.getByText('1,500 ms', { selector: 'dd' })).toBeTruthy()
+   })
+ 
+   it('breaks output tokens into labeled reasoning and content rows', () => {
+     render(<TrajectoryTable turns={TURNS} {...FOLD_PROPS} />)
+-    fireEvent.click(screen.getByRole('row', { name: /ASSISTANT/ }))
++    fireEvent.click(screen.getByRole('row', { name: /助手/ }))
+ 
+-    expect(screen.getByText('Tokens')).toBeTruthy()
++    expect(screen.getByText('Token')).toBeTruthy()
+     expect(screen.getByText('20 tok')).toBeTruthy()
+-    expect(screen.getByText('Reasoning')).toBeTruthy()
++    expect(screen.getByText('推理')).toBeTruthy()
+     expect(screen.getByText('5 tok')).toBeTruthy()
+-    expect(screen.getByText('Content')).toBeTruthy()
++    expect(screen.getByText('正文')).toBeTruthy()
+     expect(screen.getByText('15 tok')).toBeTruthy()
+   })
+ 
+   it('marks Summary scroll regions for interaction-only scrollbar thumbs', () => {
+     render(<TrajectoryTable turns={TURNS} {...FOLD_PROPS} />)
+-    fireEvent.click(screen.getByRole('row', { name: /ASSISTANT/ }))
++    fireEvent.click(screen.getByRole('row', { name: /助手/ }))
+ 
+     const panel = screen.getByRole('tabpanel')
+     expect(panel.querySelectorAll('[data-summary-scroll-region]').length).toBeGreaterThan(1)
+ 
+-    fireEvent.click(screen.getByRole('tab', { name: 'Preview' }))
++    fireEvent.click(screen.getByRole('tab', { name: '预览' }))
+     expect(panel.querySelector('[data-summary-scroll-region]')).toBeNull()
+   })
+ 
+@@ -146,7 +146,7 @@ describe('TrajectoryTable', () => {
+     const turns: readonly TrajectoryTurnModel[] = [{
+       turn: 1,
+       groups: [{
+-        title: 'Step 1',
++        title: '步骤 1',
+         cells: [{
+           index: 1,
+           kind: 'message',
+@@ -158,13 +158,13 @@ describe('TrajectoryTable', () => {
+     }]
+     render(<TrajectoryTable turns={turns} {...FOLD_PROPS} />)
+ 
+-    fireEvent.click(screen.getByRole('row', { name: /ASSISTANT/ }))
+-    const toggle = screen.getByRole('button', { name: 'Thinking' })
++    fireEvent.click(screen.getByRole('row', { name: /助手/ }))
++    const toggle = screen.getByRole('button', { name: '思考过程' })
+     expect(toggle.getAttribute('aria-expanded')).toBe('false')
+     expect(screen.queryByText(thinking)).toBeNull()
+ 
+     fireEvent.click(toggle)
+-    expect(screen.getByRole('button', { name: 'Thinking' })).toBe(toggle)
++    expect(screen.getByRole('button', { name: '思考过程' })).toBe(toggle)
+     expect(toggle.getAttribute('aria-expanded')).toBe('true')
+     expect(toggle.parentElement?.textContent?.length).toBeGreaterThan(thinking.length)
+   })
+@@ -179,7 +179,7 @@ describe('TrajectoryTable', () => {
+     const turns: readonly TrajectoryTurnModel[] = [{
+       turn: 1,
+       groups: [{
+-        title: 'Message',
++        title: '消息',
+         cells: [{
+           index: 1,
+           kind: 'context',
+@@ -206,18 +206,18 @@ describe('TrajectoryTable', () => {
+         onClearSelection={onClearSelection}
+       />,
+     )
+-    const row = screen.getByRole('row', { name: /ASSISTANT/ })
++    const row = screen.getByRole('row', { name: /助手/ })
+     fireEvent.click(row)
+ 
+     expect(row.getAttribute('aria-selected')).toBe('true')
+-    expect(screen.getByRole('complementary', { name: 'Event details' })).toBeTruthy()
++    expect(screen.getByRole('complementary', { name: '事件详情' })).toBeTruthy()
+ 
+     const tablePane = screen.getByRole('table').parentElement
+     expect(tablePane).not.toBeNull()
+     fireEvent.click(tablePane as HTMLElement)
+ 
+     expect(row.getAttribute('aria-selected')).toBe('false')
+-    expect(screen.queryByRole('complementary', { name: 'Event details' })).toBeNull()
++    expect(screen.queryByRole('complementary', { name: '事件详情' })).toBeNull()
+     expect(onClearSelection).toHaveBeenCalledOnce()
+   })
+ 
+@@ -225,7 +225,7 @@ describe('TrajectoryTable', () => {
+     const tail = (index: number): TrajectoryTurnModel => ({
+       turn: 2,
+       groups: [{
+-        title: 'Step 1',
++        title: '步骤 1',
+         cells: [{
+           index,
+           kind: 'message',
+@@ -246,7 +246,7 @@ describe('TrajectoryTable', () => {
+         turns={[{
+           turn: 1,
+           groups: [{
+-            title: 'Message',
++            title: '消息',
+             cells: [{
+               index: 1,
+               kind: 'user',
+@@ -269,7 +269,7 @@ describe('TrajectoryTable', () => {
+     const tail = (index: number): TrajectoryTurnModel => ({
+       turn: 2,
+       groups: [{
+-        title: 'Step 1',
++        title: '步骤 1',
+         cells: [{
+           index,
+           kind: 'message',
+@@ -282,14 +282,14 @@ describe('TrajectoryTable', () => {
+     const view = render(
+       <TrajectoryTable turns={[tail(1)]} {...FOLD_PROPS} />,
+     )
+-    fireEvent.click(screen.getByRole('button', { name: 'Request #1' }))
++    fireEvent.click(screen.getByRole('button', { name: '请求 #1' }))
+ 
+     view.rerender(
+       <TrajectoryTable
+         turns={[{
+           turn: 1,
+           groups: [{
+-            title: 'Step 1',
++            title: '步骤 1',
+             cells: [{
+               index: 1,
+               kind: 'message',
+@@ -303,16 +303,16 @@ describe('TrajectoryTable', () => {
+       />,
+     )
+ 
+-    expect(screen.getByRole('button', { name: 'Request #2' })
++    expect(screen.getByRole('button', { name: '请求 #2' })
+       .getAttribute('aria-pressed')).toBe('true')
+-    expect(screen.getByText('Request #2')).toBeTruthy()
++    expect(screen.getByText('请求 #2')).toBeTruthy()
+   })
+ 
+   it('places the request boundary after leading steering input', () => {
+     const turns: readonly TrajectoryTurnModel[] = [{
+       turn: 1,
+       groups: [{
+-        title: 'Step 2',
++        title: '步骤 2',
+         cells: [{
+           index: 1,
+           kind: 'user',
+@@ -335,14 +335,14 @@ describe('TrajectoryTable', () => {
+         seq: 2,
+         turn: 1,
+         step: 2,
+-        group: 'Step 2',
++        group: '步骤 2',
+         number: 1,
+       }]}
+       {...FOLD_PROPS}
+     />)
+ 
+-    const request = screen.getByRole('button', { name: 'Request #1' })
+-    expect(request.closest('tr')?.getAttribute('aria-label')).toContain('ASSISTANT')
++    const request = screen.getByRole('button', { name: '请求 #1' })
++    expect(request.closest('tr')?.getAttribute('aria-label')).toContain('助手')
+   })
+ 
+   it('follows appended records only while the ledger is already at the bottom', () => {
+@@ -362,7 +362,7 @@ describe('TrajectoryTable', () => {
+         turns={[...TURNS, {
+           turn: 2,
+           groups: [{
+-            title: 'Step 1',
++            title: '步骤 1',
+             cells: [{ index: 4, kind: 'message', text: 'new reply', timeSeconds: 0.1 }],
+           }],
+         }]}
+@@ -379,7 +379,7 @@ describe('TrajectoryTable', () => {
+         turns={[...TURNS, {
+           turn: 2,
+           groups: [{
+-            title: 'Step 1',
++            title: '步骤 1',
+             cells: [
+               { index: 4, kind: 'message', text: 'new reply', timeSeconds: 0.1 },
+               { index: 5, kind: 'tool', text: 'new tool', timeSeconds: 0.1 },
+@@ -416,7 +416,7 @@ describe('TrajectoryTable', () => {
+     fireEvent.scroll(tablePane)
+ 
+     await waitFor(() => { expect(onLoadOlder).toHaveBeenCalledOnce() })
+-    expect(screen.getByRole('status').textContent).toContain('Loading earlier history…')
++    expect(screen.getByRole('status').textContent).toContain('正在加载更早历史…')
+     resolveOlder?.(true)
+     await waitFor(() => {
+       expect(screen.getByRole('status').textContent).toBe('')
+@@ -427,7 +427,7 @@ describe('TrajectoryTable', () => {
+         turns={[{
+           turn: 0,
+           groups: [{
+-            title: 'Step 1',
++            title: '步骤 1',
+             cells: [{ index: 0, kind: 'user', text: 'older prompt', timeSeconds: 0 }],
+           }],
+         }, ...TURNS]}
+@@ -459,30 +459,30 @@ describe('TrajectoryTable', () => {
+     )
+ 
+     const table = screen.getByRole('table')
+-    const loadButton = screen.getByRole('button', { name: 'Load earlier history' })
++    const loadButton = screen.getByRole('button', { name: '加载更早历史' })
+     const loadRow = table.querySelector('tbody > tr:first-child')
+     expect(loadRow?.contains(loadButton)).toBe(true)
+     expect(loadRow?.getAttribute('aria-rowindex')).toBe('1')
+     expect(screen.getByRole('status').textContent).toBe('')
+     expect(table.getAttribute('aria-rowcount')).toBe('4')
+-    expect((await screen.findByRole('row', { name: /ASSISTANT/ })).getAttribute('aria-rowindex'))
++    expect((await screen.findByRole('row', { name: /助手/ })).getAttribute('aria-rowindex'))
+       .toBe('2')
+ 
+     fireEvent.click(loadButton)
+     expect(onLoadOlder).toHaveBeenCalledOnce()
+     expect(loadButton.hasAttribute('disabled')).toBe(true)
+-    expect(screen.getByRole('status').textContent).toBe('Loading earlier history…')
++    expect(screen.getByRole('status').textContent).toBe('正在加载更早历史…')
+ 
+     resolveOlder?.(false)
+     await waitFor(() => {
+-      expect(screen.getByRole('button', { name: 'Load earlier history' })
++      expect(screen.getByRole('button', { name: '加载更早历史' })
+         .hasAttribute('disabled')).toBe(false)
+     })
+ 
+     view.rerender(
+       <TrajectoryTable turns={TURNS} {...FOLD_PROPS} />,
+     )
+-    expect(screen.queryByRole('button', { name: 'Load earlier history' })).toBeNull()
++    expect(screen.queryByRole('button', { name: '加载更早历史' })).toBeNull()
+     expect(table.getAttribute('aria-rowcount')).toBe('3')
+   })
+ 
+@@ -497,9 +497,9 @@ describe('TrajectoryTable', () => {
+       />,
+     )
+ 
+-    expect(screen.getByRole('button', { name: 'Loading earlier history…' })
++    expect(screen.getByRole('button', { name: '正在加载更早历史…' })
+       .hasAttribute('disabled')).toBe(true)
+-    expect(screen.getByRole('status').textContent).toBe('Loading earlier history…')
++    expect(screen.getByRole('status').textContent).toBe('正在加载更早历史…')
+   })
+ 
+   it('covers the ledger while the initial tail is loading', () => {
+@@ -507,7 +507,7 @@ describe('TrajectoryTable', () => {
+       <TrajectoryTable turns={TURNS} {...FOLD_PROPS} historyLoading />,
+     )
+ 
+-    expect(screen.getByRole('status').textContent).toContain('Loading trajectory…')
++    expect(screen.getByRole('status').textContent).toContain('正在加载轨迹…')
+     expect(screen.getByRole('table').getAttribute('data-scroll-ready')).toBeNull()
+ 
+     view.rerender(<TrajectoryTable turns={TURNS} {...FOLD_PROPS} />)
+@@ -628,7 +628,7 @@ describe('TrajectoryTable', () => {
+       (_, index) => ({
+         turn: index + 1,
+         groups: [{
+-          title: 'Step 1',
++          title: '步骤 1',
+           cells: [
+             {
+               index: index * 2 + 1,
+@@ -671,12 +671,12 @@ describe('TrajectoryTable', () => {
+     expect(view.container.querySelector('tr[data-kind="tool"][data-running="true"]')).toBeTruthy()
+     expect(view.container.querySelector('tr[data-kind="tool"][data-error="true"]')).toBeTruthy()
+ 
+-    fireEvent.click(screen.getByRole('row', { name: /TOOL, bash \{"command":"pwd"\}/ }))
+-    expect(screen.getByText('Pending')).toBeTruthy()
+-    fireEvent.click(screen.getByRole('row', { name: /TOOL, bash \{"command":"false"\}/ }))
+-    expect(screen.getByText('Failed')).toBeTruthy()
+-    expect(screen.getByText('Failed').className).toContain('error')
+-    fireEvent.click(screen.getByRole('tab', { name: 'Result' }))
++    fireEvent.click(screen.getByRole('row', { name: /工具，bash \{"command":"pwd"\}/ }))
++    expect(screen.getByText('进行中')).toBeTruthy()
++    fireEvent.click(screen.getByRole('row', { name: /工具，bash \{"command":"false"\}/ }))
++    expect(screen.getByText('失败')).toBeTruthy()
++    expect(screen.getByText('失败').className).toContain('error')
++    fireEvent.click(screen.getByRole('tab', { name: '结果' }))
+     const errorResult = screen.getByText('ToolError: non_zero_exit')
+     expect(errorResult.closest('[class*="errorPayload"]')).toBeTruthy()
+   })
+@@ -686,7 +686,7 @@ describe('TrajectoryTable', () => {
+       {
+         turn: 1,
+         groups: [{
+-          title: 'Step 1',
++          title: '步骤 1',
+           cells: [{
+             index: 1,
+             kind: 'message',
+@@ -700,7 +700,7 @@ describe('TrajectoryTable', () => {
+       {
+         turn: 2,
+         groups: [{
+-          title: 'Step 1',
++          title: '步骤 1',
+           cells: [{
+             index: 2,
+             kind: 'message',
+@@ -714,7 +714,7 @@ describe('TrajectoryTable', () => {
+       {
+         turn: 3,
+         groups: [{
+-          title: 'Step 1',
++          title: '步骤 1',
+           cells: [{
+             index: 3,
+             kind: 'message',
+@@ -726,9 +726,9 @@ describe('TrajectoryTable', () => {
+     ]
+     render(<TrajectoryTable turns={turns} {...FOLD_PROPS} />)
+ 
+-    const failed = screen.getByRole('button', { name: 'Request #1' })
+-    const retry = screen.getByRole('button', { name: 'Request #2' })
+-    const recovered = screen.getByRole('button', { name: 'Request #3' })
++    const failed = screen.getByRole('button', { name: '请求 #1' })
++    const retry = screen.getByRole('button', { name: '请求 #2' })
++    const recovered = screen.getByRole('button', { name: '请求 #3' })
+     expect(failed.getAttribute('data-request-status')).toBe('error')
+     expect(failed.getAttribute('data-request-run-index')).toBe('0')
+     expect(failed.style.getPropertyValue('--request-boundary-offset')).toBe('0px')
+@@ -751,7 +751,7 @@ describe('TrajectoryTable', () => {
+     expect(screen.queryByRole('tooltip')).toBeNull()
+     fireEvent.mouseEnter(toolIcon as HTMLElement)
+     const tooltip = screen.getByRole('tooltip')
+-    expect(tooltip.textContent).toBe('TOOL')
++    expect(tooltip.textContent).toBe('工具')
+     expect(tooltip.getAttribute('data-side')).toBe('right')
+     fireEvent.mouseLeave(toolIcon as HTMLElement)
+     expect(screen.queryByRole('tooltip')).toBeNull()
+@@ -780,9 +780,9 @@ describe('TrajectoryTable', () => {
+ 
+   it('keeps a compact turn label available for narrow layouts', () => {
+     render(<TrajectoryTable turns={TURNS} {...FOLD_PROPS} />)
+-    const turnLabel = screen.getByLabelText('Turn 1')
++    const turnLabel = screen.getByLabelText('轮次 1')
+ 
+-    expect(turnLabel.textContent).toContain('Turn 1')
++    expect(turnLabel.textContent).toContain('轮次 1')
+     expect(turnLabel.textContent).toContain('#1')
+   })
+ 
+@@ -790,7 +790,7 @@ describe('TrajectoryTable', () => {
+     const turns: readonly TrajectoryTurnModel[] = [{
+       turn: 1,
+       groups: [{
+-        title: 'Step 1',
++        title: '步骤 1',
+         cells: [{
+           index: 1,
+           kind: 'tool',
+@@ -806,10 +806,10 @@ describe('TrajectoryTable', () => {
+     }]
+ 
+     render(<TrajectoryTable turns={turns} {...FOLD_PROPS} />)
+-    fireEvent.click(screen.getByRole('row', { name: /TOOL/ }))
+-    fireEvent.click(screen.getByRole('tab', { name: 'Result' }))
++    fireEvent.click(screen.getByRole('row', { name: /工具/ }))
++    fireEvent.click(screen.getByRole('tab', { name: '结果' }))
+ 
+-    expect(screen.getByRole('tree', { name: 'Result JSON' })).toBeTruthy()
++    expect(screen.getByRole('tree', { name: '结果 JSON' })).toBeTruthy()
+     expect(screen.getByText('value:')).toBeTruthy()
+   })
+ 
+@@ -822,14 +822,14 @@ describe('TrajectoryTable', () => {
+       />,
+     )
+     expect(screen.queryByRole('columnheader')).toBeNull()
+-    expect(screen.getByRole('row', { name: /ASSISTANT/ })).toBeTruthy()
+-    expect(screen.getByRole('row', { name: /Collapsed turn summary/ })).toBeTruthy()
++    expect(screen.getByRole('row', { name: /助手/ })).toBeTruthy()
++    expect(screen.getByRole('row', { name: /已折叠轮次摘要/ })).toBeTruthy()
+   })
+ 
+   const CALL_TURNS: readonly TrajectoryTurnModel[] = [{
+     turn: 1,
+     groups: [{
+-      title: 'Step 1',
++      title: '步骤 1',
+       cells: [{
+         index: 1,
+         kind: 'tool',
+@@ -852,8 +852,8 @@ describe('TrajectoryTable', () => {
+       />,
+     )
+ 
+-    expect(screen.getByRole('row', { name: /TOOL/ }).getAttribute('aria-selected')).toBe('true')
+-    expect(screen.getByRole('complementary', { name: 'Event details' })).toBeTruthy()
++    expect(screen.getByRole('row', { name: /工具/ }).getAttribute('aria-selected')).toBe('true')
++    expect(screen.getByRole('complementary', { name: '事件详情' })).toBeTruthy()
+     expect(onInspectApplied).toHaveBeenCalledOnce()
+   })
+ 
+@@ -868,7 +868,7 @@ describe('TrajectoryTable', () => {
+       />,
+     )
+ 
+-    expect(screen.getByRole('row', { name: /TOOL/ }).getAttribute('aria-selected')).toBe('false')
++    expect(screen.getByRole('row', { name: /工具/ }).getAttribute('aria-selected')).toBe('false')
+     expect(onInspectApplied).not.toHaveBeenCalled()
+   })
+ })
+diff --git a/packages/client/ui-trajectory/tests/views.client.spec.tsx b/packages/client/ui-trajectory/tests/views.client.spec.tsx
+index 77c3587..7774f58 100644
+--- a/packages/client/ui-trajectory/tests/views.client.spec.tsx
++++ b/packages/client/ui-trajectory/tests/views.client.spec.tsx
+@@ -369,12 +369,12 @@ describe('tab switching in ConversationRoot', () => {
+     expect(view.container.querySelectorAll('tr[data-turn-start="true"]')).toHaveLength(2)
+     expect(screen.queryByRole('columnheader')).toBeNull()
+     expect(screen.getByRole('toolbar', { name: '轨迹工具栏' })).toBeTruthy()
+-    expect(screen.getByRole('region', { name: 'Trajectory timeline' })).toBeTruthy()
++    expect(screen.getByRole('region', { name: '轨迹时间线' })).toBeTruthy()
+     expect(view.container.querySelector('[data-conversation-composer-overlay]')).toBeTruthy()
+-    fireEvent.click(screen.getByRole('button', { name: 'Collapse turns' }))
++    fireEvent.click(screen.getByRole('button', { name: '收起轮次' }))
+     expect(view.container.querySelector('[data-collapsed-summary="turn"]')).toBeTruthy()
+-    fireEvent.click(screen.getByRole('button', { name: 'Expand turns' }))
+-    expect(screen.getByRole('row', { name: /USER/ })).toBeTruthy()
++    fireEvent.click(screen.getByRole('button', { name: '展开轮次' }))
++    expect(screen.getByRole('row', { name: /用户/ })).toBeTruthy()
+     expect(screen.queryByTestId('chat-body')).toBeNull()
+     expect(b.loadOlder).not.toHaveBeenCalled()
+     fireEvent.click(screen.getByRole('tab', { name: 'Chat' }))
+@@ -397,14 +397,14 @@ describe('tab switching in ConversationRoot', () => {
+     mount(b.slots)
+     fireEvent.click(screen.getByRole('tab', { name: 'Trajectory' }))
+ 
+-    fireEvent.keyDown(screen.getByRole('row', { name: /TOOL/ }), { key: 'Enter' })
+-    expect(screen.getByRole('complementary', { name: 'Event details' })).toBeTruthy()
+-    expect(screen.getByText('Turn 1 · Step 1')).toBeTruthy()
+-    expect(screen.getByText('Completed')).toBeTruthy()
+-    expect(screen.getByRole('tab', { name: 'Result' })).toBeTruthy()
++    fireEvent.keyDown(screen.getByRole('row', { name: /工具/ }), { key: 'Enter' })
++    expect(screen.getByRole('complementary', { name: '事件详情' })).toBeTruthy()
++    expect(screen.getByText('轮次 1 · 步骤 1')).toBeTruthy()
++    expect(screen.getByText('已完成')).toBeTruthy()
++    expect(screen.getByRole('tab', { name: '结果' })).toBeTruthy()
+ 
+-    fireEvent.click(screen.getByRole('button', { name: 'Close details' }))
+-    expect(screen.queryByRole('complementary', { name: 'Event details' })).toBeNull()
++    fireEvent.click(screen.getByRole('button', { name: '关闭详情' }))
++    expect(screen.queryByRole('complementary', { name: '事件详情' })).toBeNull()
+   })
+ 
+   it('labels a standalone compaction as between-turn work in the ledger and inspector', async () => {
+@@ -434,11 +434,11 @@ describe('tab switching in ConversationRoot', () => {
+     const view = mount(b.slots, nodes)
+     fireEvent.click(screen.getByRole('tab', { name: 'Trajectory' }))
+ 
+-    expect(screen.getByText('Between turns')).toBeTruthy()
++    expect(screen.getByText('轮次之间')).toBeTruthy()
+     expect(view.container.textContent).not.toContain('Turn null')
+ 
+-    fireEvent.click(screen.getByRole('button', { name: 'Request #2 · Compaction' }))
+-    expect(screen.getByText('Compaction · Between turns')).toBeTruthy()
++    fireEvent.click(screen.getByRole('button', { name: '请求 #2 · 压缩' }))
++    expect(screen.getByText('压缩 · 轮次之间')).toBeTruthy()
+     expect(view.container.textContent).not.toContain('Turn null')
+   })
+ 
+@@ -486,31 +486,31 @@ describe('tab switching in ConversationRoot', () => {
+     mount(b.slots, nodes)
+     fireEvent.click(screen.getByRole('tab', { name: 'Trajectory' }))
+ 
+-    const firstRequest = screen.getByRole('button', { name: 'Request #2 · Compaction' })
+-    const secondRequest = screen.getByRole('button', { name: 'Request #4 · Compaction' })
++    const firstRequest = screen.getByRole('button', { name: '请求 #2 · 压缩' })
++    const secondRequest = screen.getByRole('button', { name: '请求 #4 · 压缩' })
+     const firstSection = firstRequest.closest('tr')?.querySelector('span')
+     const secondSection = secondRequest.closest('tr')?.querySelector('span')
+-    expect(firstSection?.textContent).toBe('Between turns')
+-    expect(secondSection?.textContent).toBe('Between turns')
++    expect(firstSection?.textContent).toBe('轮次之间')
++    expect(secondSection?.textContent).toBe('轮次之间')
+ 
+     fireEvent.click(firstRequest)
+     expect(firstSection?.className).toMatch(/turnLabelActive/)
+     expect(secondSection?.className).not.toMatch(/turnLabelActive/)
+-    expect(screen.getByText('Request #2')).toBeTruthy()
+-    expect(screen.getByText('Compaction · Between turns')).toBeTruthy()
++    expect(screen.getByText('请求 #2')).toBeTruthy()
++    expect(screen.getByText('压缩 · 轮次之间')).toBeTruthy()
+ 
+     fireEvent.click(secondRequest)
+     expect(firstSection?.className).not.toMatch(/turnLabelActive/)
+     expect(secondSection?.className).toMatch(/turnLabelActive/)
+-    expect(screen.getByText('Request #4')).toBeTruthy()
+-    expect(screen.getByText('Compaction · Between turns')).toBeTruthy()
++    expect(screen.getByText('请求 #4')).toBeTruthy()
++    expect(screen.getByText('压缩 · 轮次之间')).toBeTruthy()
+   })
+ 
+   it('dragging the overview focuses overlapping records without filtering the ledger', async () => {
+     const b = await bench()
+     mount(b.slots)
+     fireEvent.click(screen.getByRole('tab', { name: 'Trajectory' }))
+-    const plot = screen.getByLabelText('Timeline overview; drag horizontally to focus events')
++    const plot = screen.getByLabelText('时间线总览；水平拖动以聚焦事件')
+     vi.spyOn(plot, 'getBoundingClientRect').mockReturnValue({
+       x: 0, y: 0, left: 0, top: 0, right: 100, bottom: 72, width: 100, height: 72,
+       toJSON: () => ({}),
+@@ -519,22 +519,22 @@ describe('tab switching in ConversationRoot', () => {
+     fireEvent.pointerMove(plot, { clientX: 95, pointerId: 1 })
+     fireEvent.pointerUp(plot, { clientX: 95, pointerId: 1 })
+ 
+-    expect(screen.getByRole('row', { name: /USER/ }).getAttribute('data-timeline-focus'))
++    expect(screen.getByRole('row', { name: /用户/ }).getAttribute('data-timeline-focus'))
+       .toBe('outside')
+ 
+     const tablePane = screen.getByRole('table').parentElement
+     expect(tablePane).not.toBeNull()
+     fireEvent.click(tablePane as HTMLElement)
+-    expect(screen.getByRole('row', { name: /USER/ }).getAttribute('data-timeline-focus'))
++    expect(screen.getByRole('row', { name: /用户/ }).getAttribute('data-timeline-focus'))
+       .toBeNull()
+ 
+     fireEvent.pointerDown(plot, { button: 0, clientX: 55, pointerId: 2 })
+     fireEvent.pointerMove(plot, { clientX: 95, pointerId: 2 })
+     fireEvent.pointerUp(plot, { clientX: 95, pointerId: 2 })
+-    expect(screen.getByRole('row', { name: /USER/ }).getAttribute('data-timeline-focus'))
++    expect(screen.getByRole('row', { name: /用户/ }).getAttribute('data-timeline-focus'))
+       .toBe('outside')
+     fireEvent.contextMenu(plot)
+-    expect(screen.getByRole('row', { name: /USER/ }).getAttribute('data-timeline-focus'))
++    expect(screen.getByRole('row', { name: /用户/ }).getAttribute('data-timeline-focus'))
+       .toBe('outside')
+   })
+ 
+@@ -542,7 +542,7 @@ describe('tab switching in ConversationRoot', () => {
+     const b = await bench()
+     const view = mount(b.slots)
+     fireEvent.click(screen.getByRole('tab', { name: 'Trajectory' }))
+-    const plot = screen.getByLabelText('Timeline overview; drag horizontally to focus events')
++    const plot = screen.getByLabelText('时间线总览；水平拖动以聚焦事件')
+     vi.spyOn(plot, 'getBoundingClientRect').mockReturnValue({
+       x: 0, y: 0, left: 0, top: 0, right: 100, bottom: 72, width: 100, height: 72,
+       toJSON: () => ({}),
+@@ -573,7 +573,7 @@ describe('tab switching in ConversationRoot', () => {
+     )
+     expect(selectedRow?.getAttribute('aria-selected')).toBe('true')
+     expect(view.container.querySelector('tr[data-timeline-focus]')).toBeNull()
+-    expect(screen.getByRole('complementary', { name: 'Event details' })).toBeTruthy()
++    expect(screen.getByRole('complementary', { name: '事件详情' })).toBeTruthy()
+   })
+ 
+   it('empty window keeps the toolbar and reports no timing data', async () => {
+@@ -581,12 +581,12 @@ describe('tab switching in ConversationRoot', () => {
+     mount(b.slots)
+     fireEvent.click(screen.getByRole('tab', { name: 'Trajectory' }))
+     expect(screen.getByRole('toolbar', { name: '轨迹工具栏' })).toBeTruthy()
+-    expect(screen.getByText('No timing data')).toBeTruthy()
++    expect(screen.getByText('暂无计时数据')).toBeTruthy()
+     expect(screen.getByRole<HTMLButtonElement>('button', {
+-      name: 'Collapse turns',
++      name: '收起轮次',
+     }).disabled).toBe(false)
+     expect(screen.getByRole<HTMLButtonElement>('button', {
+-      name: 'Collapse calls',
++      name: '收起调用',
+     }).disabled).toBe(false)
+     expect(screen.queryByRole('row')).toBeNull()
+     expect(screen.queryByText(/turns ·/)).toBeNull()
+@@ -597,7 +597,7 @@ describe('timeline projection', () => {
+   const turns = [{
+     turn: 1,
+     groups: [{
+-      title: 'Step 1',
++      title: '步骤 1',
+       cells: [
+         { index: 1, kind: 'message', text: 'assistant', startedAt: 1_000, timeSeconds: 1 },
+         { index: 2, kind: 'tool', text: 'bash', startedAt: 2_000, timeSeconds: 1 },
+@@ -608,7 +608,7 @@ describe('timeline projection', () => {
+   const longTurns = [{
+     turn: 1,
+     groups: [{
+-      title: 'Step 1',
++      title: '步骤 1',
+       cells: Array.from({ length: 10 }, (_, index) => ({
+         index,
+         kind: 'message' as const,
+@@ -626,7 +626,7 @@ describe('timeline projection', () => {
+           turns={[{
+             turn: 1,
+             groups: [{
+-              title: 'Step 1',
++              title: '步骤 1',
+               cells: [{
+                 index: 1,
+                 kind: 'message',
+@@ -661,9 +661,9 @@ describe('timeline projection', () => {
+       expect(view.container.querySelector('[role="tooltip"]')).toBeNull()
+       act(() => { vi.advanceTimersByTime(1) })
+       const tooltip = view.container.querySelector<HTMLElement>('[role="tooltip"]')
+-      expect(tooltip?.textContent).toContain('Total 2,000 ms')
++      expect(tooltip?.textContent).toContain('总耗时 2,000 ms')
+       expect(tooltip?.textContent).toContain('TTFT 500 ms')
+-      expect(tooltip?.textContent).toContain('Decoding 1,500 ms')
++      expect(tooltip?.textContent).toContain('解码 1,500 ms')
+     } finally {
+       vi.useRealTimers()
+     }
+@@ -682,19 +682,19 @@ describe('timeline projection', () => {
+       />,
+     )
+ 
+-    const boundary = screen.getByLabelText('Load earlier history')
++    const boundary = screen.getByLabelText('加载更早历史')
+     expect(boundary.getAttribute('data-earlier-history')).not.toBeNull()
+-    const plot = screen.getByLabelText('Timeline overview; drag horizontally to focus events')
++    const plot = screen.getByLabelText('时间线总览；水平拖动以聚焦事件')
+     fireEvent.pointerMove(plot, { clientX: 50, pointerId: 1 })
+     expect(view.container.querySelector('[data-timeline-hover-line]')).toBeTruthy()
+     fireEvent.pointerEnter(boundary)
+     expect(view.container.querySelector('[data-timeline-hover-line]')).toBeNull()
+     fireEvent.focus(boundary)
+     expect(screen.getByRole('tooltip').textContent)
+-      .toContain('Click to load earlier history')
++      .toContain('点击加载更早历史')
+     fireEvent.click(boundary)
+     expect(onLoadEarlier).toHaveBeenCalledOnce()
+-    expect(screen.getByLabelText('Loading earlier history')).toBeTruthy()
++    expect(screen.getByLabelText('正在加载更早历史')).toBeTruthy()
+ 
+     view.rerender(
+       <TrajectoryTimeline
+@@ -704,8 +704,8 @@ describe('timeline projection', () => {
+         onRangeChange={vi.fn()}
+       />,
+     )
+-    expect(screen.queryByLabelText('Load earlier history')).toBeNull()
+-    expect(screen.queryByLabelText('Loading earlier history')).toBeNull()
++    expect(screen.queryByLabelText('加载更早历史')).toBeNull()
++    expect(screen.queryByLabelText('正在加载更早历史')).toBeNull()
+   })
+ 
+   it('cancels native scrolling across the timeline while zooming', () => {
+@@ -717,14 +717,14 @@ describe('timeline projection', () => {
+         onRangeChange={vi.fn()}
+       />,
+     )
+-    const plot = screen.getByLabelText('Timeline overview; drag horizontally to focus events')
++    const plot = screen.getByLabelText('时间线总览；水平拖动以聚焦事件')
+     vi.spyOn(plot, 'getBoundingClientRect').mockReturnValue({
+       x: 44, y: 0, left: 44, top: 0, right: 144, bottom: 50, width: 100, height: 50,
+       toJSON: () => ({}),
+     })
+ 
+     expect(fireEvent.wheel(plot, { clientX: 94, deltaY: -100 })).toBe(false)
+-    expect(fireEvent.wheel(screen.getByText('Input'), {
++    expect(fireEvent.wheel(screen.getByText('输入'), {
+       clientX: 20,
+       deltaY: -100,
+     })).toBe(false)
+@@ -749,7 +749,7 @@ describe('timeline projection', () => {
+     const denseTurns = [{
+       turn: 1,
+       groups: [{
+-        title: 'Step 1',
++        title: '步骤 1',
+         cells: Array.from({ length: 400 }, (_, index) => ({
+           index,
+           kind: 'message' as const,
+@@ -784,14 +784,14 @@ describe('timeline projection', () => {
+         onRangeChange={onRangeChange}
+       />,
+     )
+-    const plot = screen.getByLabelText('Timeline overview; drag horizontally to focus events')
+-    expect(screen.getByLabelText('Load earlier history')).toBeTruthy()
++    const plot = screen.getByLabelText('时间线总览；水平拖动以聚焦事件')
++    expect(screen.getByLabelText('加载更早历史')).toBeTruthy()
+     vi.spyOn(plot, 'getBoundingClientRect').mockReturnValue({
+       x: 0, y: 0, left: 0, top: 0, right: 100, bottom: 72, width: 100, height: 72,
+       toJSON: () => ({}),
+     })
+     fireEvent.wheel(plot, { clientX: 50, deltaY: -1_000 })
+-    expect(screen.queryByLabelText('Load earlier history')).toBeNull()
++    expect(screen.queryByLabelText('加载更早历史')).toBeNull()
+     const domain = view.container.querySelector<HTMLElement>('[data-timeline-domain]')
+     const domainWidth = domain?.style.getPropertyValue('--trajectory-domain-width')
+     expect(domainWidth).not.toBe('100%')
+@@ -815,7 +815,7 @@ describe('timeline projection', () => {
+         onRangeChange={onRangeChange}
+       />,
+     )
+-    const plot = screen.getByLabelText('Timeline overview; drag horizontally to focus events')
++    const plot = screen.getByLabelText('时间线总览；水平拖动以聚焦事件')
+ 
+     fireEvent.pointerDown(plot, { button: 2, clientX: 50, pointerId: 1 })
+     expect(fireEvent.contextMenu(plot)).toBe(false)
+@@ -834,7 +834,7 @@ describe('timeline projection', () => {
+         onRangeChange={onRangeChange}
+       />,
+     )
+-    const plot = screen.getByLabelText('Timeline overview; drag horizontally to focus events')
++    const plot = screen.getByLabelText('时间线总览；水平拖动以聚焦事件')
+     vi.spyOn(plot, 'getBoundingClientRect').mockReturnValue({
+       x: 0, y: 0, left: 0, top: 0, right: 100, bottom: 72, width: 100, height: 72,
+       toJSON: () => ({}),
+@@ -864,7 +864,7 @@ describe('timeline projection', () => {
+         onRangeChange={onRangeChange}
+       />,
+     )
+-    const plot = screen.getByLabelText('Timeline overview; drag horizontally to focus events')
++    const plot = screen.getByLabelText('时间线总览；水平拖动以聚焦事件')
+     vi.spyOn(plot, 'getBoundingClientRect').mockReturnValue({
+       x: 0, y: 0, left: 0, top: 0, right: 100, bottom: 72, width: 100, height: 72,
+       toJSON: () => ({}),
+@@ -914,7 +914,7 @@ describe('timeline projection', () => {
+         onRangeChange={onRangeChange}
+       />,
+     )
+-    const plot = screen.getByLabelText('Timeline overview; drag horizontally to focus events')
++    const plot = screen.getByLabelText('时间线总览；水平拖动以聚焦事件')
+     vi.spyOn(plot, 'getBoundingClientRect').mockReturnValue({
+       x: 0, y: 0, left: 0, top: 0, right: 100, bottom: 72, width: 100, height: 72,
+       toJSON: () => ({}),
+@@ -972,7 +972,7 @@ describe('timeline projection', () => {
+     const errorTurns = [{
+       turn: 1,
+       groups: [{
+-        title: 'Step 1',
++        title: '步骤 1',
+         cells: [{
+           index: 1,
+           kind: 'tool' as const,
+@@ -1001,7 +1001,7 @@ describe('timeline projection', () => {
+       {
+         turn: 1,
+         groups: [{
+-          title: 'Step 1',
++          title: '步骤 1',
+           cells: [
+             { index: 1, kind: 'message', text: 'first', startedAt: 1_000, timeSeconds: 1 },
+             { index: 2, kind: 'tool', text: 'within-turn gap', startedAt: 4_000, timeSeconds: 1 },
+@@ -1011,7 +1011,7 @@ describe('timeline projection', () => {
+       {
+         turn: 2,
+         groups: [{
+-          title: 'Step 1',
++          title: '步骤 1',
+           cells: [
+             { index: 3, kind: 'message', text: 'after user idle', startedAt: 40_000, timeSeconds: 1 },
+           ],
+@@ -1039,7 +1039,7 @@ describe('timeline projection', () => {
+       {
+         turn: 1,
+         groups: [{
+-          title: 'Step 1',
++          title: '步骤 1',
+           cells: [
+             { index: 1, kind: 'message', text: 'first', startedAt: 1_000, timeSeconds: 1 },
+             { index: 2, kind: 'tool', text: 'within-turn gap', startedAt: 4_000, timeSeconds: 1 },
+@@ -1049,7 +1049,7 @@ describe('timeline projection', () => {
+       {
+         turn: 2,
+         groups: [{
+-          title: 'Step 1',
++          title: '步骤 1',
+           cells: [
+             { index: 3, kind: 'message', text: 'after user idle', startedAt: 40_000, timeSeconds: 1 },
+           ],
+@@ -1086,21 +1086,21 @@ describe('timeline projection', () => {
+       {
+         turn: 1,
+         groups: [{
+-          title: 'Step 1',
++          title: '步骤 1',
+           cells: [{ index: 1, kind: 'message', text: 'before', timeSeconds: 0 }],
+         }],
+       },
+       {
+         turn: null,
+         groups: [{
+-          title: 'Compaction 3',
++          title: '压缩 3',
+           cells: [{ index: 2, kind: 'compacted', text: 'summary', timeSeconds: 0 }],
+         }],
+       },
+       {
+         turn: 2,
+         groups: [{
+-          title: 'Step 1',
++          title: '步骤 1',
+           cells: [{ index: 3, kind: 'message', text: 'after', timeSeconds: 0 }],
+         }],
+       },
+@@ -1148,7 +1148,7 @@ describe('TrajectoryView state', () => {
+         setActualDuration={(value) => { firstDuration.set(value) }}
+       />,
+     )
+-    const duration = screen.getByRole('button', { name: 'Use actual duration' })
++    const duration = screen.getByRole('button', { name: '按实际耗时' })
+ 
+     expect(duration.getAttribute('aria-pressed')).toBe('false')
+     fireEvent.click(duration)
+@@ -1163,7 +1163,7 @@ describe('TrajectoryView state', () => {
+         setActualDuration={(value) => { restoredDuration.set(value) }}
+       />,
+     )
+-    expect(screen.getByRole('button', { name: 'Use actual duration' }).getAttribute('aria-pressed'))
++    expect(screen.getByRole('button', { name: '按实际耗时' }).getAttribute('aria-pressed'))
+       .toBe('true')
+   })
+ 
+diff --git a/packages/client/ui-workspace/src/client/tree.ts b/packages/client/ui-workspace/src/client/tree.ts
+index 23649a2..7a5bd8c 100644
+--- a/packages/client/ui-workspace/src/client/tree.ts
++++ b/packages/client/ui-workspace/src/client/tree.ts
+@@ -127,7 +127,7 @@ function sessionVisible(session: SessionSummary, current: SessionId | undefined,
+  * and the renderer localizes its display label.
+  */
+ function sessionTitle(session: SessionSummary): string {
+-  return session.blank ? 'New Session' : session.displayTitle
++  return session.blank ? '新会话' : session.displayTitle
+ }
+ 
+ /** Build one group without projecting session lineage into presentation. */
+diff --git a/packages/client/ui-workspace/tests/tree.client.spec.ts b/packages/client/ui-workspace/tests/tree.client.spec.ts
+index f2e069d..7db7cdd 100644
+--- a/packages/client/ui-workspace/tests/tree.client.spec.ts
++++ b/packages/client/ui-workspace/tests/tree.client.spec.ts
+@@ -83,7 +83,7 @@ describe('deriveGroups', () => {
+     const blankNode = groups[0]!.sessions.find(session => session.id === currentBlank.id)!
+     // The stored placeholder title stays canonical; the renderer swaps in
+     // the localized New Session label via the blank flag.
+-    expect(blankNode.title).toBe('New Session')
++    expect(blankNode.title).toBe('新会话')
+     expect(blankNode.blank).toBe(true)
+     expect(groups[0]!.sessions.find(session => session.id === real.id)!.blank).toBe(false)
+     expect(groups[0]!.sessionCount).toBe(2)
+@@ -240,7 +240,7 @@ describe('deriveFlat', () => {
+     }
+     const rows = deriveFlat(sessions, noArchive)
+     expect(rows.map(row => row.id)).toEqual([currentBlank.id, sid('real')])
+-    expect(rows.map(row => row.title)).toEqual(['New Session', 'real'])
++    expect(rows.map(row => row.title)).toEqual(['新会话', 'real'])
+     expect(rows.map(row => row.blank)).toEqual([true, false])
+   })
+ 
+diff --git a/packages/client/web/src/AppRoot.tsx b/packages/client/web/src/AppRoot.tsx
+index d8ef311..ce57e5b 100644
+--- a/packages/client/web/src/AppRoot.tsx
++++ b/packages/client/web/src/AppRoot.tsx
+@@ -44,12 +44,12 @@ export function AppRoot(props: AppRootProps) {
+           ? (
+             <>
+               <div className={css.spinner} />
+-              <div className={css.hint}>Loading plugins…</div>
++              <div className={css.hint}>正在加载插件…</div>
+             </>
+           )
+           : (
+             <div className={css.failed}>
+-              <div className={css.failedTitle}>Failed to load plugins</div>
++              <div className={css.failedTitle}>插件加载失败</div>
+               {failed.map(([id]) => <div key={id} className={css.failedItem}>{id}</div>)}
+               {error !== undefined && <div className={css.failedItem}>{error}</div>}
+             </div>
+diff --git a/packages/client/web/tests/app-root.client.spec.tsx b/packages/client/web/tests/app-root.client.spec.tsx
+index 7b42461..3dc27f6 100644
+--- a/packages/client/web/tests/app-root.client.spec.tsx
++++ b/packages/client/web/tests/app-root.client.spec.tsx
+@@ -53,7 +53,7 @@ describe('AppRoot', () => {
+       status.set('@deepseek-ai/dsh-client-ui-layout', 'failed')
+       status.set('ok', 'active')
+     })
+-    expect(getByText('Failed to load plugins')).toBeTruthy()
++    expect(getByText('插件加载失败')).toBeTruthy()
+     expect(getByText('@deepseek-ai/dsh-client-ui-layout')).toBeTruthy()
+     expect(queryByTestId('real-ui')).toBeNull()
+   })
+@@ -61,7 +61,7 @@ describe('AppRoot', () => {
+   it('renders the boot failure report even when no entry projected failed', () => {
+     const { error, getByText, queryByTestId } = mount()
+     act(() => { error.set('web boot: 1 entry did not activate\nx: pending (waiting for service: y)') })
+-    expect(getByText('Failed to load plugins')).toBeTruthy()
++    expect(getByText('插件加载失败')).toBeTruthy()
+     expect(getByText(/waiting for service/)).toBeTruthy()
+     expect(queryByTestId('real-ui')).toBeNull()
+   })

@@ -1,0 +1,31 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    # Standard macos-15 runners are Apple Silicon (arm64); the Intel variant
+    # is macos-15-intel. This project only builds arm64.
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Node.js download
+        uses: actions/cache@v4
+        with:
+          path: build/downloads
+          key: node-download-${{ hashFiles('config/build-versions.env') }}
+
+      - name: Build and test
+        run: ./scripts/build-app.sh
+
+      - name: Upload app bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: DeepSeek-Harness-macos-arm64
+          path: dist/DeepSeek-Harness-macos-arm64.zip
+          if-no-files-found: error

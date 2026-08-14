@@ -1,0 +1,121 @@
+diff --git a/apps/cli/package.json b/apps/cli/package.json
+--- a/apps/cli/package.json
++++ b/apps/cli/package.json
+@@ -20,6 +20,7 @@
+   ],
+   "license": "MIT",
+   "dependencies": {
++    "@deepseek-ai/cordis-plugin-group": "workspace:^",
+     "@deepseek-ai/cordis-plugin-hmr": "workspace:^",
+     "@deepseek-ai/cordis-plugin-include": "workspace:^",
+     "@deepseek-ai/cordis-plugin-loader": "workspace:^",
+diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
+--- a/pnpm-lock.yaml
++++ b/pnpm-lock.yaml
+@@ -129,6 +129,9 @@ importers:
+       '@deepseek-ai/cordis':
+         specifier: workspace:^
+         version: link:../../vendor/cordis
++      '@deepseek-ai/cordis-plugin-group':
++        specifier: workspace:^
++        version: link:../../vendor/group
+       '@deepseek-ai/cordis-plugin-hmr':
+         specifier: workspace:^
+         version: link:../../vendor/hmr
+diff --git a/apps/cli/tests/production-dependencies.spec.ts b/apps/cli/tests/production-dependencies.spec.ts
+new file mode 100644
+--- /dev/null
++++ b/apps/cli/tests/production-dependencies.spec.ts
+@@ -0,0 +1,13 @@
++import { readFileSync } from 'node:fs'
++
++import { describe, expect, it } from 'vitest'
++
++describe('CLI production dependencies', () => {
++  it('provides the required app-boot group peer', () => {
++    const manifest = JSON.parse(
++      readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
++    ) as { dependencies?: Record<string, string> }
++
++    expect(manifest.dependencies?.['@deepseek-ai/cordis-plugin-group']).toBe('workspace:^')
++  })
++})
+diff --git a/.agents/notes/implemented/bug-fix/2026-08-14-cli-provides-app-boot-group-peer.md b/.agents/notes/implemented/bug-fix/2026-08-14-cli-provides-app-boot-group-peer.md
+new file mode 100644
+--- /dev/null
++++ b/.agents/notes/implemented/bug-fix/2026-08-14-cli-provides-app-boot-group-peer.md
+@@ -0,0 +1,29 @@
++# Agent Note: CLI provides the app-boot group peer
++
++Status: implemented
++
++English | [中文](2026-08-14-cli-provides-app-boot-group-peer.zh.md)
++
++## Problem
++
++`@deepseek-ai/dsh-app-boot` imports `@deepseek-ai/cordis-plugin-group` and declares it as a required peer dependency. `@deepseek-ai/dsh` depends on app-boot but did not provide that peer. The workspace development install supplied the package elsewhere and allowed source tests to pass, while `pnpm --filter @deepseek-ai/dsh --prod deploy --legacy` omitted it. Starting the deployed `lib/bin.js` then failed with `ERR_MODULE_NOT_FOUND` before the web server printed its address.
++
++## Decision
++
++The CLI package declares `@deepseek-ai/cordis-plugin-group` as a production dependency. A production deployment therefore includes the peer that app-boot imports during startup without depending on workspace development dependencies or a packaging wrapper.
++
++The CLI manifest test records this host responsibility directly. Assembled-product verification must also start the production deployment with its packaged Node executable because workspace module resolution cannot prove the deployed dependency graph.
++
++## Alternatives considered
++
++- **Injecting group only in desktop packaging.** This would leave the published CLI package and every other production deploy command broken, so the package manifest owns the dependency instead.
++- **Moving group from app-boot peers into app-boot dependencies.** App-boot uses peers so each host owns the Cordis plugin instances in its composition. Changing that ownership for every host is broader than correcting the CLI host.
++- **Relying on another CLI dependency to install group transitively.** Peer resolution must not depend on an unrelated package retaining an implementation detail, and the current production deploy demonstrates that no such guarantee exists.
++
++## Consequences
++
++Production CLI deployments contain one additional vendored Cordis plugin and can load app-boot before any profile configuration is read. The CLI manifest has a small explicit dependency cost, while other app-boot hosts retain their existing peer ownership.
++
++## Testing
++
++`apps/cli/tests/production-dependencies.spec.ts` checks the CLI manifest. Desktop release verification deploys production dependencies, starts `lib/bin.js web --host 127.0.0.1 --port 0` with the packaged Node executable, and requires the loopback startup address before signing the distributable.
+diff --git a/.agents/notes/implemented/bug-fix/2026-08-14-cli-provides-app-boot-group-peer.zh.md b/.agents/notes/implemented/bug-fix/2026-08-14-cli-provides-app-boot-group-peer.zh.md
+new file mode 100644
+--- /dev/null
++++ b/.agents/notes/implemented/bug-fix/2026-08-14-cli-provides-app-boot-group-peer.zh.md
+@@ -0,0 +1,29 @@
++# Agent Note：CLI 提供 app-boot 所需的 group peer
++
++Status: implemented
++
++[English](2026-08-14-cli-provides-app-boot-group-peer.md) | 中文
++
++## 问题
++
++`@deepseek-ai/dsh-app-boot` 会导入 `@deepseek-ai/cordis-plugin-group`，并将其声明为必需的 peer dependency。`@deepseek-ai/dsh` 依赖 app-boot，却没有提供这个 peer。工作区开发安装会从其他位置提供该包，因此源码测试能够通过；而 `pnpm --filter @deepseek-ai/dsh --prod deploy --legacy` 不会部署它。启动部署后的 `lib/bin.js` 随即在 Web 服务输出地址之前以 `ERR_MODULE_NOT_FOUND` 失败。
++
++## 决策
++
++CLI 包将 `@deepseek-ai/cordis-plugin-group` 声明为生产依赖。生产部署因此会包含 app-boot 在启动时导入的 peer，不再依赖工作区开发依赖或打包器注入。
++
++CLI 清单测试直接记录这一宿主责任。组装产物还必须用产物内的 Node 可执行文件启动生产部署，因为工作区模块解析无法证明部署后的依赖图完整。
++
++## 考虑过的替代方案
++
++- **只在桌面打包阶段注入 group。** 这会让发布的 CLI 包及其他生产部署命令继续处于损坏状态，因此依赖应由包清单拥有。
++- **把 group 从 app-boot 的 peer 移到 app-boot 自身依赖。** app-boot 使用 peer，让每个宿主拥有其组合中的 Cordis 插件实例；为所有宿主改变这一归属超出了修正 CLI 宿主所需的范围。
++- **依靠另一个 CLI 依赖间接安装 group。** peer 解析不能依赖无关包保留其实现细节，而且当前生产部署已经证明这种保证并不存在。
++
++## 后果
++
++CLI 生产部署会多包含一个 vendored Cordis 插件，并可在读取任何 profile 配置前加载 app-boot。CLI 清单承担一项小而明确的依赖成本，其他 app-boot 宿主继续保留现有的 peer 归属。
++
++## 测试
++
++`apps/cli/tests/production-dependencies.spec.ts` 检查 CLI 清单。桌面发布验证会部署生产依赖，使用产物内的 Node 可执行文件启动 `lib/bin.js web --host 127.0.0.1 --port 0`，并在签署分发产物前要求获得 loopback 启动地址。
+diff --git a/.agents/notes/implemented/bug-fix/2026-08-14-cli-provides-app-boot-group-peer.i18n.yaml b/.agents/notes/implemented/bug-fix/2026-08-14-cli-provides-app-boot-group-peer.i18n.yaml
+new file mode 100644
+--- /dev/null
++++ b/.agents/notes/implemented/bug-fix/2026-08-14-cli-provides-app-boot-group-peer.i18n.yaml
+@@ -0,0 +1,6 @@
++# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
++# side as of the last confirmed-consistent state. Both languages carry equal authority;
++# after editing either side, bring the other along and re-record with:
++#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-08-14-cli-provides-app-boot-group-peer.md
++2026-08-14-cli-provides-app-boot-group-peer.md: aae46490785737c07eabe5b30e94e6f323dafb5d
++2026-08-14-cli-provides-app-boot-group-peer.zh.md: 45fa667f22843ca7222cff4305616b457bbc92cb

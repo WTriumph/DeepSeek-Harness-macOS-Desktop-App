@@ -1,0 +1,50 @@
+diff --git a/packages/client/ui-settings-general/src/client/SettingsRoot.tsx b/packages/client/ui-settings-general/src/client/SettingsRoot.tsx
+index 7627475..2500218 100644
+--- a/packages/client/ui-settings-general/src/client/SettingsRoot.tsx
++++ b/packages/client/ui-settings-general/src/client/SettingsRoot.tsx
+@@ -115,6 +115,15 @@ export function SettingsRoot(props: SettingsRootComponentProps) {
+     setOpen(true)
+   }, [])
+ 
++  // Desktop shells have no URL route into this surface: the native menu bar
++  // dispatches `dsh:open-settings` on window, and the trigger stays mounted
++  // (rail or wide), so the listener lives for the panel's whole lifetime.
++  useEffect(() => {
++    const openFromDesktop = (): void => { setOpen(true) }
++    window.addEventListener('dsh:open-settings', openFromDesktop)
++    return () => { window.removeEventListener('dsh:open-settings', openFromDesktop) }
++  }, [])
++
+   // The ledger tick keeps the nav rows fresh: registrants re-register with
+   // freshly localized text on locale change, and the trigger/header/close
+   // seats re-render through their own outlets' subscriptions.
+diff --git a/packages/client/ui-settings-general/tests/settings-root.client.spec.tsx b/packages/client/ui-settings-general/tests/settings-root.client.spec.tsx
+index c9ec593..85ce135 100644
+--- a/packages/client/ui-settings-general/tests/settings-root.client.spec.tsx
++++ b/packages/client/ui-settings-general/tests/settings-root.client.spec.tsx
+@@ -97,6 +97,25 @@ describe('SettingsRoot trigger', () => {
+   })
+ })
+ 
++describe('SettingsRoot desktop open event', () => {
++  it('opens the panel when a desktop shell dispatches dsh:open-settings on window', () => {
++    mount()
++    act(() => {
++      window.dispatchEvent(new Event('dsh:open-settings'))
++    })
++    expect(screen.getByRole('dialog')).toBeTruthy()
++    expect(screen.getByRole('button', { name: 'Settings', expanded: true })).toBeTruthy()
++  })
++
++  it('removes the window listener when the trigger unmounts', () => {
++    const removeSpy = vi.spyOn(window, 'removeEventListener')
++    const { view } = mount()
++    view.unmount()
++    expect(removeSpy.mock.calls.some(([name]) => name === 'dsh:open-settings')).toBe(true)
++    removeSpy.mockRestore()
++  })
++})
++
+ describe('SettingsPanel chrome seats', () => {
+   it('names the dialog via aria-labelledby pointing at the header seat node', () => {
+     mount()

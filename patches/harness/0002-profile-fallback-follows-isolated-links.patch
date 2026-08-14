@@ -1,0 +1,143 @@
+diff --git a/packages/boot/app-boot/src/profile.ts b/packages/boot/app-boot/src/profile.ts
+--- a/packages/boot/app-boot/src/profile.ts
++++ b/packages/boot/app-boot/src/profile.ts
+@@ -24,7 +24,8 @@
+ 
+ import { createRequire } from 'node:module'
+ import {
+-  existsSync, lstatSync, mkdirSync, readFileSync, readlinkSync, symlinkSync, unlinkSync, writeFileSync,
++  existsSync, lstatSync, mkdirSync, readFileSync, readlinkSync, realpathSync, symlinkSync, unlinkSync,
++  writeFileSync,
+ } from 'node:fs'
+ import { basename, dirname, join } from 'node:path'
+ import type { EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
+@@ -324,7 +325,9 @@ function packageDirFromAnchor(anchor: string, packageName: string): string | und
+   /* v8 ignore next */
+   for (const searchPath of createRequire(anchor).resolve.paths(packageName) ?? []) {
+     const candidate = join(searchPath, packageName)
+-    if (existsSync(join(candidate, 'package.json'))) return candidate
++    if (existsSync(join(candidate, 'package.json'))) {
++      return lstatSync(candidate).isSymbolicLink() ? realpathSync(candidate) : candidate
++    }
+   }
+   return undefined
+ }
+diff --git a/packages/boot/app-boot/tests/profile.spec.ts b/packages/boot/app-boot/tests/profile.spec.ts
+--- a/packages/boot/app-boot/tests/profile.spec.ts
++++ b/packages/boot/app-boot/tests/profile.spec.ts
+@@ -239,6 +239,36 @@ describe('healProfilesModuleFallback', () => {
+     expect(before).toContain('dep-of-a')
+   })
+ 
++  it('walks dependencies from an isolated symlinked package location', () => {
++    const root = tmp()
++    const appDir = join(root, 'app')
++    const modules = join(appDir, 'node_modules')
++    const isolatedModules = join(modules, '.store', 'bundle-a', 'node_modules')
++    const bundleDir = join(isolatedModules, 'bundle-a')
++    const dependencyDir = join(isolatedModules, 'dep-of-a')
++    mkdirSync(bundleDir, { recursive: true })
++    mkdirSync(dependencyDir, { recursive: true })
++    writeFileSync(join(appDir, 'package.json'), JSON.stringify({
++      name: 'dsh-app',
++      dependencies: { 'bundle-a': '0.0.0' },
++    }))
++    writeFileSync(join(bundleDir, 'package.json'), JSON.stringify({
++      name: 'bundle-a',
++      version: '0.0.0',
++      dependencies: { 'dep-of-a': '0.0.0' },
++    }))
++    writeFileSync(join(dependencyDir, 'package.json'), JSON.stringify({
++      name: 'dep-of-a',
++      version: '0.0.0',
++    }))
++    symlinkSync(join('.store', 'bundle-a', 'node_modules', 'bundle-a'), join(modules, 'bundle-a'), 'junction')
++
++    const home = tmp()
++    healProfilesModuleFallback(join(appDir, 'package.json'), home)
++
++    expect(lstatSync(join(home, 'profiles', 'node_modules', 'dep-of-a')).isSymbolicLink()).toBe(true)
++  })
++
+   it('throws when a fallback entry is a real directory', () => {
+     const anchor = stageInstallation({})
+     const home = tmp()
+diff --git a/.agents/notes/implemented/bug-fix/2026-08-14-profile-fallback-follows-isolated-links.md b/.agents/notes/implemented/bug-fix/2026-08-14-profile-fallback-follows-isolated-links.md
+new file mode 100644
+--- /dev/null
++++ b/.agents/notes/implemented/bug-fix/2026-08-14-profile-fallback-follows-isolated-links.md
+@@ -0,0 +1,29 @@
++# Agent Note: profile fallback follows isolated package links
++
++Status: implemented
++
++English | [中文](2026-08-14-profile-fallback-follows-isolated-links.zh.md)
++
++## Problem
++
++`healProfilesModuleFallback` promises a breadth-first walk over the installed CLI dependency graph so bare plugin names resolve from `$DSH_HOME/profiles/node_modules`. `packageDirFromAnchor` returned the visible top-level symlink for a package installed by pnpm's isolated linker. The next breadth-first step therefore computed Node search paths from the symlink location instead of the package's virtual-store location and could not see that package's own dependencies. A production-only CLI deployment linked direct CLI dependencies but omitted the transitive plugin roster owned by `dsh-base` and `dsh-web-app`, so Web profile startup reported many `ERR_MODULE_NOT_FOUND` failures.
++
++## Decision
++
++`packageDirFromAnchor` resolves a candidate to its real directory when the candidate itself is a symbolic link. Direct package directories retain their existing path. Each subsequent breadth-first step therefore starts from the pnpm virtual-store package directory, where Node's parent walk reaches that package's isolated dependency links.
++
++The fallback continues to contain one flat link per discovered package and still uses first resolution wins. The change only repairs discovery of dependencies behind an installed package symlink.
++
++## Alternatives considered
++
++- **Hoisting every production dependency.** This would make the current search accidentally succeed but would replace the documented isolated-linker support with a package-manager layout requirement.
++- **Adding every Web plugin to the CLI manifest.** This duplicates bundle dependency ownership, drifts whenever bundle composition changes, and does not repair other transitive dependency walks.
++- **Resolving every candidate unconditionally.** macOS temporary directories expose `/var` through `/private/var`; unconditional canonicalization would change returned paths for ordinary directories. Only symbolic package entries require canonicalization.
++
++## Consequences
++
++Production and source installations produce the same complete profile fallback despite different pnpm layouts. The resolver performs one `lstat` and, for symbolic package entries, one `realpath` per discovered dependency. User-managed profile dependencies and direct package directories keep their existing precedence and paths.
++
++## Testing
++
++`packages/boot/app-boot/tests/profile.spec.ts` stages an isolated virtual-store package with a top-level symlink and asserts that its transitive dependency appears in the fallback. Existing flat-layout, exports-map, replacement, and idempotence tests remain unchanged.
+diff --git a/.agents/notes/implemented/bug-fix/2026-08-14-profile-fallback-follows-isolated-links.zh.md b/.agents/notes/implemented/bug-fix/2026-08-14-profile-fallback-follows-isolated-links.zh.md
+new file mode 100644
+--- /dev/null
++++ b/.agents/notes/implemented/bug-fix/2026-08-14-profile-fallback-follows-isolated-links.zh.md
+@@ -0,0 +1,29 @@
++# Agent Note：profile fallback 跟随隔离包链接
++
++Status: implemented
++
++[English](2026-08-14-profile-fallback-follows-isolated-links.md) | 中文
++
++## 问题
++
++`healProfilesModuleFallback` 承诺对已安装 CLI 的依赖图进行广度优先遍历，让裸插件名称可从 `$DSH_HOME/profiles/node_modules` 解析。对于 pnpm 隔离链接器安装的包，`packageDirFromAnchor` 返回顶层可见符号链接。下一次广度优先遍历因此从符号链接位置而不是包的虚拟存储位置计算 Node 搜索路径，无法看到该包自己的依赖。只含生产依赖的 CLI 部署只能链接 CLI 直接依赖，却会遗漏由 `dsh-base` 和 `dsh-web-app` 拥有的传递插件清单，Web profile 启动时因而报告大量 `ERR_MODULE_NOT_FOUND`。
++
++## 决策
++
++当候选项本身是符号链接时，`packageDirFromAnchor` 将其解析到真实目录。普通包目录继续保留原路径。后续每一步广度优先遍历因此会从 pnpm 虚拟存储中的包目录开始，Node 的父目录查找可抵达该包的隔离依赖链接。
++
++fallback 仍然为每个发现的包保留一个扁平链接，并继续采用首次解析优先。该改动只修复已安装包符号链接后的依赖发现。
++
++## 考虑过的替代方案
++
++- **提升所有生产依赖。** 这会让当前搜索碰巧成功，却会把文档承诺的隔离链接器支持替换为对包管理器布局的要求。
++- **把每个 Web 插件都加入 CLI 清单。** 这会重复 bundle 的依赖归属，在 bundle 组合变化时发生漂移，也无法修复其他传递依赖遍历。
++- **无条件解析每个候选项的真实路径。** macOS 临时目录通过 `/private/var` 暴露 `/var`；无条件规范化会改变普通目录的返回路径。只有符号包项需要规范化。
++
++## 后果
++
++生产安装和源码安装即使使用不同 pnpm 布局，也会生成相同且完整的 profile fallback。解析器对每个发现的依赖执行一次 `lstat`，并仅对符号包项再执行一次 `realpath`。用户管理的 profile 依赖和普通包目录维持原有优先级及路径。
++
++## 测试
++
++`packages/boot/app-boot/tests/profile.spec.ts` 构造带顶层符号链接的隔离虚拟存储包，并断言其传递依赖出现在 fallback 中。现有的扁平布局、exports map、替换及幂等性测试保持不变。
+diff --git a/.agents/notes/implemented/bug-fix/2026-08-14-profile-fallback-follows-isolated-links.i18n.yaml b/.agents/notes/implemented/bug-fix/2026-08-14-profile-fallback-follows-isolated-links.i18n.yaml
+new file mode 100644
+--- /dev/null
++++ b/.agents/notes/implemented/bug-fix/2026-08-14-profile-fallback-follows-isolated-links.i18n.yaml
+@@ -0,0 +1,6 @@
++# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
++# side as of the last confirmed-consistent state. Both languages carry equal authority;
++# after editing either side, bring the other along and re-record with:
++#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-08-14-profile-fallback-follows-isolated-links.md
++2026-08-14-profile-fallback-follows-isolated-links.md: 9cfd690051982ca59e173ca93584935f6d8fa463
++2026-08-14-profile-fallback-follows-isolated-links.zh.md: 9d4a622e389aec56b1f7634fb4486e93a1307c28

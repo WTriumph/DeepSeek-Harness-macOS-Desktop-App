@@ -1,0 +1,309 @@
+diff --git a/packages/bundle/base/package.json b/packages/bundle/base/package.json
+index 706ee32..2b41f02 100644
+--- a/packages/bundle/base/package.json
++++ b/packages/bundle/base/package.json
+@@ -44,7 +44,9 @@
+     "@deepseek-ai/dsh-agent": "workspace:^",
+     "@deepseek-ai/dsh-agent-default-model": "workspace:^",
+     "@deepseek-ai/dsh-agent-loop": "workspace:^",
++    "@deepseek-ai/dsh-anonymous-user-id": "workspace:^",
+     "@deepseek-ai/dsh-attachment-local": "workspace:^",
++    "@deepseek-ai/dsh-atomic-write": "workspace:^",
+     "@deepseek-ai/dsh-shell-env": "workspace:^",
+     "@deepseek-ai/dsh-bash-sandbox": "workspace:^",
+     "@deepseek-ai/dsh-command-compact": "workspace:^",
+@@ -57,6 +59,7 @@
+     "@deepseek-ai/dsh-fs-local": "workspace:^",
+     "@deepseek-ai/dsh-fs-observation-policy": "workspace:^",
+     "@deepseek-ai/dsh-fs-sandbox": "workspace:^",
++    "@deepseek-ai/dsh-fs": "workspace:^",
+     "@deepseek-ai/dsh-goal": "workspace:^",
+     "@deepseek-ai/dsh-goal-round-driver": "workspace:^",
+     "@deepseek-ai/dsh-api-gateway": "workspace:^",
+@@ -64,33 +67,43 @@
+     "@deepseek-ai/dsh-llm-deepseek": "workspace:^",
+     "@deepseek-ai/dsh-llm-pi-ai": "workspace:^",
+     "@deepseek-ai/dsh-llm-retry": "workspace:^",
++    "@deepseek-ai/dsh-output-retention": "workspace:^",
+     "@deepseek-ai/dsh-permission-presets": "workspace:^",
+     "@deepseek-ai/dsh-plan-mode": "workspace:^",
+     "@deepseek-ai/dsh-pwsh-sandbox": "workspace:^",
+     "@deepseek-ai/dsh-repeat-tool-reminder": "workspace:^",
+     "@deepseek-ai/dsh-sandbox-local": "workspace:^",
+     "@deepseek-ai/dsh-sandbox-policy": "workspace:^",
++    "@deepseek-ai/dsh-sandbox": "workspace:^",
++    "@deepseek-ai/dsh-scope": "workspace:^",
+     "@deepseek-ai/dsh-session": "workspace:^",
+     "@deepseek-ai/dsh-session-checkpoint-policy": "workspace:^",
+     "@deepseek-ai/dsh-session-persistence-jsonl": "workspace:^",
+     "@deepseek-ai/dsh-session-projection": "workspace:^",
+     "@deepseek-ai/dsh-session-query-sqlite": "workspace:^",
++    "@deepseek-ai/dsh-session-telemetry": "workspace:^",
+     "@deepseek-ai/dsh-session-telemetry-otel": "workspace:^",
+     "@deepseek-ai/dsh-session-title": "workspace:^",
+     "@deepseek-ai/dsh-session-title-first-prompt-llm": "workspace:^",
++    "@deepseek-ai/dsh-session-title-llm": "workspace:^",
+     "@deepseek-ai/dsh-settings-file": "workspace:^",
+     "@deepseek-ai/dsh-skill": "workspace:^",
+     "@deepseek-ai/dsh-skill-badge": "workspace:^",
+     "@deepseek-ai/dsh-skill-filesystem": "workspace:^",
++    "@deepseek-ai/dsh-shell": "workspace:^",
+     "@deepseek-ai/dsh-spill-local": "workspace:^",
+     "@deepseek-ai/dsh-spill-policy": "workspace:^",
++    "@deepseek-ai/dsh-spill": "workspace:^",
+     "@deepseek-ai/dsh-subagent": "workspace:^",
+     "@deepseek-ai/dsh-subagent-fork-in-process": "workspace:^",
++    "@deepseek-ai/dsh-subagent-in-process-driver": "workspace:^",
+     "@deepseek-ai/dsh-subagent-spawn-in-process": "workspace:^",
+     "@deepseek-ai/dsh-subprocess-local": "workspace:^",
++    "@deepseek-ai/dsh-subprocess": "workspace:^",
+     "@deepseek-ai/dsh-system-prompt": "workspace:^",
+     "@deepseek-ai/dsh-jobs-local": "workspace:^",
+     "@deepseek-ai/dsh-tool-call-timeout-policy": "workspace:^",
++    "@deepseek-ai/dsh-timeout": "workspace:^",
+     "@deepseek-ai/dsh-token-meter": "workspace:^",
+     "@deepseek-ai/dsh-tool-bash": "workspace:^",
+     "@deepseek-ai/dsh-tool-fs": "workspace:^",
+diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
+index 1490a0f..579af57 100644
+--- a/pnpm-lock.yaml
++++ b/pnpm-lock.yaml
+@@ -998,9 +998,15 @@ importers:
+       '@deepseek-ai/dsh-agent-loop':
+         specifier: workspace:^
+         version: link:../../core/agent-loop
++      '@deepseek-ai/dsh-anonymous-user-id':
++        specifier: workspace:^
++        version: link:../../identity/anonymous-user-id
+       '@deepseek-ai/dsh-api-gateway':
+         specifier: workspace:^
+         version: link:../../api/gateway
++      '@deepseek-ai/dsh-atomic-write':
++        specifier: workspace:^
++        version: link:../../util/atomic-write
+       '@deepseek-ai/dsh-attachment-local':
+         specifier: workspace:^
+         version: link:../../attachment/attachment-local
+@@ -1028,6 +1034,9 @@ importers:
+       '@deepseek-ai/dsh-credentials-local':
+         specifier: workspace:^
+         version: link:../../credentials/credentials-local
++      '@deepseek-ai/dsh-fs':
++        specifier: workspace:^
++        version: link:../../fs/fs
+       '@deepseek-ai/dsh-fs-local':
+         specifier: workspace:^
+         version: link:../../fs/fs-local
+@@ -1058,6 +1067,9 @@ importers:
+       '@deepseek-ai/dsh-llm-retry':
+         specifier: workspace:^
+         version: link:../../llm/llm-retry
++      '@deepseek-ai/dsh-output-retention':
++        specifier: workspace:^
++        version: link:../../util/output-retention
+       '@deepseek-ai/dsh-permission-presets':
+         specifier: workspace:^
+         version: link:../../interaction/permission-presets
+@@ -1070,12 +1082,18 @@ importers:
+       '@deepseek-ai/dsh-repeat-tool-reminder':
+         specifier: workspace:^
+         version: link:../../guard/repeat-tool-reminder
++      '@deepseek-ai/dsh-sandbox':
++        specifier: workspace:^
++        version: link:../../sandbox/sandbox
+       '@deepseek-ai/dsh-sandbox-local':
+         specifier: workspace:^
+         version: link:../../sandbox/sandbox-local
+       '@deepseek-ai/dsh-sandbox-policy':
+         specifier: workspace:^
+         version: link:../../sandbox/sandbox-policy
++      '@deepseek-ai/dsh-scope':
++        specifier: workspace:^
++        version: link:../../core/scope
+       '@deepseek-ai/dsh-session':
+         specifier: workspace:^
+         version: link:../../core/session
+@@ -1091,6 +1109,9 @@ importers:
+       '@deepseek-ai/dsh-session-query-sqlite':
+         specifier: workspace:^
+         version: link:../../session-query/session-query-sqlite
++      '@deepseek-ai/dsh-session-telemetry':
++        specifier: workspace:^
++        version: link:../../session/session-telemetry
+       '@deepseek-ai/dsh-session-telemetry-otel':
+         specifier: workspace:^
+         version: link:../../session/session-telemetry-otel
+@@ -1100,9 +1121,15 @@ importers:
+       '@deepseek-ai/dsh-session-title-first-prompt-llm':
+         specifier: workspace:^
+         version: link:../../session/session-title-first-prompt-llm
++      '@deepseek-ai/dsh-session-title-llm':
++        specifier: workspace:^
++        version: link:../../session/session-title-llm
+       '@deepseek-ai/dsh-settings-file':
+         specifier: workspace:^
+         version: link:../../settings/settings-file
++      '@deepseek-ai/dsh-shell':
++        specifier: workspace:^
++        version: link:../../shell/shell
+       '@deepseek-ai/dsh-shell-env':
+         specifier: workspace:^
+         version: link:../../shell/shell-env
+@@ -1115,6 +1142,9 @@ importers:
+       '@deepseek-ai/dsh-skill-filesystem':
+         specifier: workspace:^
+         version: link:../../skill/skill-filesystem
++      '@deepseek-ai/dsh-spill':
++        specifier: workspace:^
++        version: link:../../spill/spill
+       '@deepseek-ai/dsh-spill-local':
+         specifier: workspace:^
+         version: link:../../spill/spill-local
+@@ -1127,15 +1157,24 @@ importers:
+       '@deepseek-ai/dsh-subagent-fork-in-process':
+         specifier: workspace:^
+         version: link:../../subagent/subagent-fork-in-process
++      '@deepseek-ai/dsh-subagent-in-process-driver':
++        specifier: workspace:^
++        version: link:../../subagent/subagent-in-process-driver
+       '@deepseek-ai/dsh-subagent-spawn-in-process':
+         specifier: workspace:^
+         version: link:../../subagent/subagent-spawn-in-process
++      '@deepseek-ai/dsh-subprocess':
++        specifier: workspace:^
++        version: link:../../subprocess/subprocess
+       '@deepseek-ai/dsh-subprocess-local':
+         specifier: workspace:^
+         version: link:../../subprocess/subprocess-local
+       '@deepseek-ai/dsh-system-prompt':
+         specifier: workspace:^
+         version: link:../../core/system-prompt
++      '@deepseek-ai/dsh-timeout':
++        specifier: workspace:^
++        version: link:../../util/timeout
+       '@deepseek-ai/dsh-token-meter':
+         specifier: workspace:^
+         version: link:../../llm/token-meter
+diff --git a/packages/bundle/base/tests/production-dependencies.spec.ts b/packages/bundle/base/tests/production-dependencies.spec.ts
+new file mode 100644
+index 0000000..6cee587
+--- /dev/null
++++ b/packages/bundle/base/tests/production-dependencies.spec.ts
+@@ -0,0 +1,31 @@
++import { readFileSync } from 'node:fs'
++
++import { describe, expect, it } from 'vitest'
++
++const requiredServicePackages = [
++  '@deepseek-ai/dsh-anonymous-user-id',
++  '@deepseek-ai/dsh-atomic-write',
++  '@deepseek-ai/dsh-fs',
++  '@deepseek-ai/dsh-output-retention',
++  '@deepseek-ai/dsh-sandbox',
++  '@deepseek-ai/dsh-scope',
++  '@deepseek-ai/dsh-session-telemetry',
++  '@deepseek-ai/dsh-session-title-llm',
++  '@deepseek-ai/dsh-shell',
++  '@deepseek-ai/dsh-spill',
++  '@deepseek-ai/dsh-subagent-in-process-driver',
++  '@deepseek-ai/dsh-subprocess',
++  '@deepseek-ai/dsh-timeout',
++] as const
++
++describe('base bundle production dependencies', () => {
++  it('provides every shared service package required by its plugin roster', () => {
++    const manifest = JSON.parse(
++      readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
++    ) as { dependencies?: Record<string, string> }
++
++    for (const packageName of requiredServicePackages) {
++      expect(manifest.dependencies?.[packageName], packageName).toBe('workspace:^')
++    }
++  })
++})
+diff --git a/.agents/notes/implemented/bug-fix/2026-08-14-base-bundle-owns-service-peers.md b/.agents/notes/implemented/bug-fix/2026-08-14-base-bundle-owns-service-peers.md
+new file mode 100644
+index 0000000..51cbc6d
+--- /dev/null
++++ b/.agents/notes/implemented/bug-fix/2026-08-14-base-bundle-owns-service-peers.md
+@@ -0,0 +1,31 @@
++# Agent Note: base bundle owns its shared service packages
++
++Status: implemented
++
++English | [中文](2026-08-14-base-bundle-owns-service-peers.zh.md)
++
++## Problem
++
++The base bundle's plugin roster imports shared Service Definition and policy packages through peer dependencies. Those peers existed in the repository development installation but were absent from the `dsh-base` production dependency graph. A production-only CLI deployment could discover the roster through profile fallback healing, yet loading the plugins failed on 13 missing packages such as `dsh-fs`, `dsh-sandbox`, `dsh-scope`, `dsh-subprocess`, and `dsh-timeout`.
++
++The bundle already owns the provider and consumer roster that needs those packages. Leaving the shared packages to the repository root made the source workspace pass while the published composition remained incomplete.
++
++## Decision
++
++`@deepseek-ai/dsh-base` declares the 13 shared packages required by its shipped plugin roster as production dependencies. This follows the package rule that a composition host provides the peer packages used by its plugins and lets the profile fallback derive its links from the bundle dependency graph.
++
++The list includes shared definitions for filesystem, sandbox, shell, spill, subprocess, scope, telemetry, session title generation, subagent driving, output retention, atomic writes, anonymous identity, and timeout handling. Providers and consumers keep those packages as peers; only the composition host owns their installed instances.
++
++## Alternatives considered
++
++- **Adding the packages to the CLI manifest.** The CLI would duplicate bundle composition knowledge and would have to change whenever the base roster changed.
++- **Promoting peer dependencies inside every provider to regular dependencies.** This risks separate Cordis service instances and changes package ownership across the repository instead of fixing the composition host.
++- **Deploying development dependencies.** This hides incomplete production manifests, ships tests and build tools, and prevents production-only installation from being verified.
++
++## Consequences
++
++Production deployment includes 13 small workspace packages that were already required at runtime. The base bundle manifest is longer, but its dependency graph now fully represents the default composition and works for every host that installs the bundle, not only the desktop wrapper.
++
++## Testing
++
++`packages/bundle/base/tests/production-dependencies.spec.ts` pins the required shared-package set. The desktop assembled-runtime test starts the production deployment with no repository `node_modules` or system Node available and requires Web profile startup to complete.
+diff --git a/.agents/notes/implemented/bug-fix/2026-08-14-base-bundle-owns-service-peers.zh.md b/.agents/notes/implemented/bug-fix/2026-08-14-base-bundle-owns-service-peers.zh.md
+new file mode 100644
+index 0000000..68e3b38
+--- /dev/null
++++ b/.agents/notes/implemented/bug-fix/2026-08-14-base-bundle-owns-service-peers.zh.md
+@@ -0,0 +1,31 @@
++# Agent Note：base bundle 拥有其共享服务包
++
++Status: implemented
++
++[English](2026-08-14-base-bundle-owns-service-peers.md) | 中文
++
++## 问题
++
++base bundle 的插件清单通过 peer dependency 导入共享的 Service Definition 和策略包。这些 peer 存在于仓库开发安装中，却不在 `dsh-base` 的生产依赖图里。只含生产依赖的 CLI 部署可以通过 profile fallback 修复发现该清单，但加载插件时会缺少 13 个包，例如 `dsh-fs`、`dsh-sandbox`、`dsh-scope`、`dsh-subprocess` 和 `dsh-timeout`。
++
++bundle 已经拥有需要这些包的 provider 和 consumer 清单。把共享包留给仓库根目录会让源码工作区通过，却使发布组合保持不完整。
++
++## 决策
++
++`@deepseek-ai/dsh-base` 将其已发布插件清单所需的 13 个共享包声明为生产依赖。这遵循组合宿主提供其插件所用 peer 包的仓库规则，并让 profile fallback 可从 bundle 依赖图推导链接。
++
++该清单包含文件系统、sandbox、shell、spill、subprocess、scope、telemetry、会话标题生成、子任务驱动、输出保留、原子写入、匿名身份和超时处理的共享定义。provider 和 consumer 继续把这些包作为 peer；只有组合宿主拥有其已安装实例。
++
++## 考虑过的替代方案
++
++- **把这些包加入 CLI 清单。** CLI 会重复 bundle 的组合知识，并且必须随 base 清单的每次变化而修改。
++- **把每个 provider 内的 peer dependency 提升为普通依赖。** 这可能产生分离的 Cordis 服务实例，并会改变整个仓库的包归属，而不是修复组合宿主。
++- **部署开发依赖。** 这会掩盖不完整的生产清单，携带测试和构建工具，并使生产专用安装无法得到验证。
++
++## 后果
++
++生产部署会包含 13 个运行时本来就需要的小型工作区包。base bundle 清单更长，但其依赖图现在完整表达默认组合，并适用于每个安装该 bundle 的宿主，而不只适用于桌面包装器。
++
++## 测试
++
++`packages/bundle/base/tests/production-dependencies.spec.ts` 固定所需共享包集合。桌面组装运行时测试在无法使用仓库 `node_modules` 或系统 Node 的环境中启动生产部署，并要求 Web profile 完成启动。
+diff --git a/.agents/notes/implemented/bug-fix/2026-08-14-base-bundle-owns-service-peers.i18n.yaml b/.agents/notes/implemented/bug-fix/2026-08-14-base-bundle-owns-service-peers.i18n.yaml
+new file mode 100644
+index 0000000..f740b29
+--- /dev/null
++++ b/.agents/notes/implemented/bug-fix/2026-08-14-base-bundle-owns-service-peers.i18n.yaml
+@@ -0,0 +1,6 @@
++# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
++# side as of the last confirmed-consistent state. Both languages carry equal authority;
++# after editing either side, bring the other along and re-record with:
++#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-08-14-base-bundle-owns-service-peers.md
++2026-08-14-base-bundle-owns-service-peers.md: 51cbc6d509f051bffbf34521e70bd84e8f205ccf
++2026-08-14-base-bundle-owns-service-peers.zh.md: 68e3b38d178aecfbc4e32903d6737bf23588e179

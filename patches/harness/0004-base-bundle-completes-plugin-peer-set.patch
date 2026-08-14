@@ -1,0 +1,105 @@
+diff --git a/packages/bundle/base/package.json b/packages/bundle/base/package.json
+--- a/packages/bundle/base/package.json
++++ b/packages/bundle/base/package.json
+@@ -48,11 +48,14 @@
+     "@deepseek-ai/dsh-attachment-local": "workspace:^",
+     "@deepseek-ai/dsh-atomic-write": "workspace:^",
+     "@deepseek-ai/dsh-shell-env": "workspace:^",
++    "@deepseek-ai/dsh-bash-local": "workspace:^",
+     "@deepseek-ai/dsh-bash-sandbox": "workspace:^",
++    "@deepseek-ai/dsh-code-runtime": "workspace:^",
+     "@deepseek-ai/dsh-command-compact": "workspace:^",
+     "@deepseek-ai/dsh-command-feedback": "workspace:^",
+     "@deepseek-ai/dsh-command-goal": "workspace:^",
+     "@deepseek-ai/dsh-commands": "workspace:^",
++    "@deepseek-ai/dsh-compaction": "workspace:^",
+     "@deepseek-ai/dsh-compaction-basic": "workspace:^",
+     "@deepseek-ai/dsh-compaction-tool-result-pruner": "workspace:^",
+     "@deepseek-ai/dsh-credentials-local": "workspace:^",
+@@ -122,11 +125,13 @@
+     "@deepseek-ai/dsh-tool-workflow": "workspace:^",
+     "@deepseek-ai/dsh-tools": "workspace:^",
+     "@deepseek-ai/dsh-typert-loader": "workspace:^",
++    "@deepseek-ai/dsh-typert-protocol": "workspace:^",
+     "@deepseek-ai/dsh-typert-registry": "workspace:^",
+     "@deepseek-ai/dsh-user-approval": "workspace:^",
+     "@deepseek-ai/dsh-user-questions": "workspace:^",
+     "@deepseek-ai/dsh-web": "workspace:^",
+     "@deepseek-ai/dsh-web-search-deepseek": "workspace:^",
++    "@deepseek-ai/dsh-workflow": "workspace:^",
+     "@deepseek-ai/dsh-workflow-worker-thread": "workspace:^",
+     "@deepseek-ai/dsh-agent-instructions": "workspace:^"
+   },
+diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
+--- a/pnpm-lock.yaml
++++ b/pnpm-lock.yaml
+@@ -1013,9 +1013,15 @@ importers:
+       '@deepseek-ai/dsh-attachment-local':
+         specifier: workspace:^
+         version: link:../../attachment/attachment-local
++      '@deepseek-ai/dsh-bash-local':
++        specifier: workspace:^
++        version: link:../../shell/bash-local
+       '@deepseek-ai/dsh-bash-sandbox':
+         specifier: workspace:^
+         version: link:../../shell/bash-sandbox
++      '@deepseek-ai/dsh-code-runtime':
++        specifier: workspace:^
++        version: link:../../code-runtime/code-runtime
+       '@deepseek-ai/dsh-command-compact':
+         specifier: workspace:^
+         version: link:../../compaction/command-compact
+@@ -1028,6 +1034,9 @@ importers:
+       '@deepseek-ai/dsh-commands':
+         specifier: workspace:^
+         version: link:../../interaction/commands
++      '@deepseek-ai/dsh-compaction':
++        specifier: workspace:^
++        version: link:../../compaction/compaction
+       '@deepseek-ai/dsh-compaction-basic':
+         specifier: workspace:^
+         version: link:../../compaction/compaction-basic
+@@ -1235,6 +1244,9 @@ importers:
+       '@deepseek-ai/dsh-typert-loader':
+         specifier: workspace:^
+         version: link:../../typert/loader
++      '@deepseek-ai/dsh-typert-protocol':
++        specifier: workspace:^
++        version: link:../../typert/protocol
+       '@deepseek-ai/dsh-typert-registry':
+         specifier: workspace:^
+         version: link:../../typert/registry
+@@ -1250,6 +1262,9 @@ importers:
+       '@deepseek-ai/dsh-web-search-deepseek':
+         specifier: workspace:^
+         version: link:../../web/web-search-deepseek
++      '@deepseek-ai/dsh-workflow':
++        specifier: workspace:^
++        version: link:../../workflow/workflow
+       '@deepseek-ai/dsh-workflow-worker-thread':
+         specifier: workspace:^
+         version: link:../../workflow/workflow-worker-thread
+diff --git a/packages/bundle/base/tests/production-dependencies.spec.ts b/packages/bundle/base/tests/production-dependencies.spec.ts
+--- a/packages/bundle/base/tests/production-dependencies.spec.ts
++++ b/packages/bundle/base/tests/production-dependencies.spec.ts
+@@ -5,15 +5,20 @@ import { describe, expect, it } from 'vitest'
+ const requiredServicePackages = [
+   '@deepseek-ai/dsh-anonymous-user-id',
+   '@deepseek-ai/dsh-atomic-write',
++  '@deepseek-ai/dsh-bash-local',
++  '@deepseek-ai/dsh-code-runtime',
++  '@deepseek-ai/dsh-compaction',
+   '@deepseek-ai/dsh-fs',
+   '@deepseek-ai/dsh-output-retention',
+   '@deepseek-ai/dsh-sandbox',
+   '@deepseek-ai/dsh-scope',
+   '@deepseek-ai/dsh-session-telemetry',
+   '@deepseek-ai/dsh-session-title-llm',
+   '@deepseek-ai/dsh-shell',
+   '@deepseek-ai/dsh-spill',
+   '@deepseek-ai/dsh-subagent-in-process-driver',
+   '@deepseek-ai/dsh-subprocess',
+   '@deepseek-ai/dsh-timeout',
++  '@deepseek-ai/dsh-typert-protocol',
++  '@deepseek-ai/dsh-workflow',
+ ] as const

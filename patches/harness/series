@@ -1,0 +1,7 @@
+# One patch filename per line, applied with patch -p1 from the extracted source.
+0001-cli-provides-app-boot-group-peer.patch
+0002-profile-fallback-follows-isolated-links.patch
+0003-base-bundle-owns-service-peers.patch
+0004-base-bundle-completes-plugin-peer-set.patch
+0005-frontend-chinese-copy.patch
+0006-desktop-opens-harness-settings.patch

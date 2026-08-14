@@ -1,0 +1,14 @@
+DeepSeek Harness Desktop includes the following redistributable software.
+
+DeepSeek Harness 0.1.0-rc.5
+Copyright (c) 2026 DeepSeek
+Licensed under the MIT License. See Harness-LICENSE.txt.
+
+Node.js 24.18.0
+Copyright Node.js contributors.
+The complete license text distributed with the official Node.js binary is
+included as Node.js-LICENSE.txt.
+
+JavaScript production dependencies are included by pnpm from the immutable
+DeepSeek Harness lockfile. Their package metadata and license files remain in
+the deployed runtime under Resources/runtime/dsh/node_modules.
