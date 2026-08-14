@@ -9,14 +9,16 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     private static let frameDefaultsKey = "MainWindowFrame"
     private static let minimumWindowWidth: CGFloat = 760
     private static let minimumWindowHeight: CGFloat = 560
-    private static let defaultWidthFraction: CGFloat = 0.86
-    private static let defaultHeightFraction: CGFloat = 0.9
-    private static let maximumDefaultWidth: CGFloat = 1728
-    private static let maximumDefaultHeight: CGFloat = 1117
+    // 首次启动默认尺寸：接近铺满可用屏幕，仅留少量边距。
+    private static let defaultFrameInset: CGFloat = 40
+    private static let fallbackWidth: CGFloat = 1280
+    private static let fallbackHeight: CGFloat = 820
 
     init() {
+        let frame = Self.restoredOrDefaultFrame()
+        NSLog("desktop: window frame resolved: %@", NSStringFromRect(frame))
         let window = NSWindow(
-            contentRect: Self.restoredOrDefaultFrame(),
+            contentRect: frame,
             styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
@@ -46,9 +48,23 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     }
 
     func windowWillClose(_ notification: Notification) {
-        persistFrame()
+        persistFrameNow()
         guard !closingForTermination else { return }
         onMainWindowClose?()
+    }
+
+    /// Persists the current window frame immediately. Also called from
+    /// `applicationWillTerminate` so ⌘Q exits keep the final size even if the
+    /// close path skips `windowWillClose`.
+    func persistFrameNow() {
+        guard let window else { return }
+        let frame = window.frame
+        guard frame.width >= Self.minimumWindowWidth, frame.height >= Self.minimumWindowHeight else { return }
+        NSLog("desktop: window frame persist: %@", NSStringFromRect(frame))
+        UserDefaults.standard.set(NSStringFromRect(frame), forKey: Self.frameDefaultsKey)
+        // The app quits immediately after the window closes; flush the write so
+        // the restored size survives the termination path.
+        UserDefaults.standard.synchronize()
     }
 
     private func installFrameObservers() {
@@ -56,20 +72,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         let center = NotificationCenter.default
         for name in [NSWindow.didResizeNotification, NSWindow.didMoveNotification] {
             let token = center.addObserver(forName: name, object: window, queue: .main) { [weak self] _ in
-                self?.persistFrame()
+                self?.persistFrameNow()
             }
             frameObservers.append(token)
         }
-    }
-
-    private func persistFrame() {
-        guard let window else { return }
-        let frame = window.frame
-        guard frame.width >= Self.minimumWindowWidth, frame.height >= Self.minimumWindowHeight else { return }
-        UserDefaults.standard.set(NSStringFromRect(frame), forKey: Self.frameDefaultsKey)
-        // The app quits immediately after the window closes; flush the write so
-        // the restored size survives the termination path.
-        UserDefaults.standard.synchronize()
     }
 
     private static func restoredOrDefaultFrame() -> NSRect {
@@ -80,17 +86,21 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
                isVisibleOnScreen(frame) {
                 return frame
             }
+            NSLog("desktop: saved window frame rejected: %@", NSStringFromRect(frame))
         }
         return defaultFrame()
     }
 
     private static func defaultFrame() -> NSRect {
         guard let screen = NSScreen.main ?? NSScreen.screens.first else {
-            return NSRect(x: 0, y: 0, width: 1280, height: 820)
+            // Screens can be empty when the controller is constructed before
+            // the app finishes launching; the caller re-resolves the frame
+            // once screens are available (see AppDelegate).
+            return NSRect(x: 0, y: 0, width: fallbackWidth, height: fallbackHeight)
         }
         let visible = screen.visibleFrame
-        let width = max(minimumWindowWidth, min(visible.width * defaultWidthFraction, maximumDefaultWidth))
-        let height = max(minimumWindowHeight, min(visible.height * defaultHeightFraction, maximumDefaultHeight))
+        let width = max(minimumWindowWidth, min(visible.width - defaultFrameInset * 2, visible.width))
+        let height = max(minimumWindowHeight, min(visible.height - defaultFrameInset * 2, visible.height))
         return NSRect(
             x: visible.midX - width / 2,
             y: visible.midY - height / 2,

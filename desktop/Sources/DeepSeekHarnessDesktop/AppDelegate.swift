@@ -8,7 +8,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let locations = AppDataLocations()
     private lazy var logger = LogFile(fileURL: locations.desktopLog)
     private let migrationService = MigrationService()
-    private let mainWindowController = MainWindowController()
+    // 懒加载：窗口控制器必须等到 App 完成启动（NSScreen 可用）后再构造，
+    // 否则保存的窗口尺寸无法通过屏幕可见性校验，每次启动都会退回兜底尺寸。
+    private lazy var mainWindowController = MainWindowController()
     private var settingsWindowController: SettingsWindowController?
     private var processController: HarnessProcessController?
     private var uninstallInProgress = false
@@ -50,6 +52,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         logger.append("desktop: applicationWillTerminate")
+        // ⌘Q 退出路径可能不触发 windowWillClose，这里兜底保存最终窗口尺寸。
+        mainWindowController.persistFrameNow()
         processController?.stopAndWait(timeout: 6)
         logger.flush()
     }
