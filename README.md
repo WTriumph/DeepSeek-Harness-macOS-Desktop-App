@@ -24,8 +24,8 @@ macOS 社区桌面发行版。App 使用 AppKit 与 WKWebView，内置 Node.js �
 
 ## 相较上游版本的改进与修改
 
-本项目保留上游 DeepSeek Harness 的 Agent、模型接入、工具调用、权限确认和会话
-能力，重点解决其在 macOS 上作为日常桌面软件使用时的安装、生命周期和数据管理
+本项目完整保留上游 DeepSeek Harness 的 Agent、模型接入、工具调用、权限确认和会话
+的全部能力，重点解决其在 macOS 上作为日常桌面软件使用时的安装、生命周期和数据管理
 问题。这里的“上游”指 [`deepseek-ai/deepseek-harness`](https://github.com/deepseek-ai/deepseek-harness)，
 不表示本社区发行版获得了 DeepSeek 的官方认可。
 
@@ -36,7 +36,7 @@ macOS 社区桌面发行版。App 使用 AppKit 与 WKWebView，内置 Node.js �
 | 进程生命周期 | 由启动它的终端或用户管理 | 关闭最后窗口、`Cmd+Q` 和 Dock 退出统一停止 dsh；超时后清理整个进程组 |
 | 本地服务 | 由命令行参数决定 | 强制监听随机 `127.0.0.1` 端口，严格校验启动 URL 后才加载 WebUI |
 | 数据 | 默认使用命令行版数据位置 | 使用独立 App Support 目录；首次启动可校验并复制 `~/.dsh`，不修改原目录 |
-| 界面 | 上游 Web UI | 增加中文本地化修复、原生“设置”入口、启动/掉线/错误状态与外部链接处理 |
+| 界面 | 上游 Web UI | 增加中文本地化修复、完善汉化、原生“设置”入口、启动/掉线/错误状态与外部链接处理 |
 | 卸载 | 删除 CLI 或依赖需由用户自行处理 | App Only、Standard、Complete 三种模式，精确列出路径，可选备份并防止宽泛删除 |
 | 构建 | 上游源码与常规包管理流程 | 固定源码、Node.js、pnpm 版本及 SHA-256；补丁从全新源码重复应用并测试 |
 
