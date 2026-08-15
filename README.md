@@ -68,7 +68,7 @@ macOS 社区桌面发行版。App 使用 AppKit 与 WKWebView，内置 Node.js �
 
 <p align="center">
   <img src="docs/assets/showcase-about.png" alt="DeepSeek Harness 关于与版权信息" width="310"><br>
-  <sub>清晰标注社区发行版、上游项目、版本与版权归属</sub>
+  <sub>版本与版权归属</sub>
 </p>
 
 ## 相较上游版本的改进与修改
