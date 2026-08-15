@@ -1,0 +1,35 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build signed arm64 App
+        run: ./scripts/build-app.sh
+      - name: Create checksum
+        working-directory: dist
+        run: shasum -a 256 DeepSeek-Harness-macos-arm64.zip > DeepSeek-Harness-macos-arm64.zip.sha256
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          body: |
+            DeepSeek Harness 0.1.0-rc.5 (Desktop 3) community macOS build / 社区 macOS 构建。
+
+            Requires macOS 13+ on Apple Silicon. This build is ad-hoc signed and not notarized; use Finder's **Open** context-menu action on first launch if Gatekeeper asks. / 需要 Apple Silicon 与 macOS 13 或更高版本。此构建使用 ad-hoc 签名且未经公证；若系统提示，请在 Finder 中首次右键选择“打开”。
+
+            **Warning / 警告:** Complete uninstall permanently deletes `~/.dsh`, `~/.agents`, and Harness-registered workspaces after typed confirmation. Review the exact paths and create a backup first. / 完全卸载在输入确认后会永久删除 `~/.dsh`、`~/.agents` 和 Harness 登记的工作区；请先核对精确路径并创建备份。
+
+            Verify the ZIP with the accompanying `.sha256` file. / 请使用随附的 `.sha256` 文件校验 ZIP。
+          files: |
+            dist/DeepSeek-Harness-macos-arm64.zip
+            dist/DeepSeek-Harness-macos-arm64.zip.sha256

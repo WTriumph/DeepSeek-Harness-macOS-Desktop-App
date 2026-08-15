@@ -24,7 +24,13 @@ struct MigrationServiceTests {
 
         let service = MigrationService()
         #expect(service.shouldOfferMigration(locations: locations))
-        try service.importLegacyHome(locations: locations)
+        let summary = try service.importLegacyHome(locations: locations)
+
+        #expect(summary.fileCount == 2)
+        #expect(summary.directoryCount == 2)
+        #expect(summary.symbolicLinkCount == 1)
+        #expect(summary.entryCount == 5)
+        #expect(summary.containsUserData)
 
         #expect(
             try String(contentsOf: locations.harnessHome.appendingPathComponent(".credentials.yaml"))
@@ -56,6 +62,29 @@ struct MigrationServiceTests {
         #expect(throws: (any Error).self) {
             try MigrationService().importLegacyHome(locations: locations)
         }
+    }
+
+    @Test func reportsWhenLegacyHomeContainsOnlyAnonymousMetadata() throws {
+        let root = try temporaryDirectory(prefix: "migration-metadata-only")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let locations = AppDataLocations(home: root)
+        try FileManager.default.createDirectory(at: locations.legacyHarnessHome, withIntermediateDirectories: true)
+        try Data("anonymous".utf8).write(
+            to: locations.legacyHarnessHome.appendingPathComponent(".anonymous-user-id")
+        )
+
+        let service = MigrationService()
+        let inspected = try service.inspectLegacyHome(locations: locations)
+        #expect(inspected.fileCount == 1)
+        #expect(inspected.entryCount == 1)
+        #expect(!inspected.containsUserData)
+
+        let imported = try service.importLegacyHome(locations: locations)
+        #expect(imported == inspected)
+        #expect(
+            try String(contentsOf: locations.harnessHome.appendingPathComponent(".anonymous-user-id"))
+                == "anonymous"
+        )
     }
 }
 

@@ -6,6 +6,8 @@ struct Arguments {
     let waitPID: pid_t
     let appBundle: URL
     let home: URL
+    let mode: UninstallMode
+    let workspacePaths: [URL]
 
     init(_ values: [String]) throws {
         func value(after flag: String) -> String? {
@@ -15,12 +17,21 @@ struct Arguments {
         guard let pidText = value(after: "--wait-pid"), let pid = pid_t(pidText), pid > 1 else {
             throw UninstallerError.invalidArguments
         }
-        guard let bundlePath = value(after: "--bundle"), let homePath = value(after: "--home") else {
+        guard let bundlePath = value(after: "--bundle"),
+              let homePath = value(after: "--home"),
+              let modeText = value(after: "--mode"),
+              let mode = UninstallMode(rawValue: modeText)
+        else {
             throw UninstallerError.invalidArguments
         }
         waitPID = pid
         appBundle = URL(fileURLWithPath: bundlePath, isDirectory: true).standardizedFileURL
         home = URL(fileURLWithPath: homePath, isDirectory: true).standardizedFileURL
+        self.mode = mode
+        workspacePaths = values.indices.compactMap { index in
+            guard values[index] == "--workspace", values.indices.contains(index + 1) else { return nil }
+            return URL(fileURLWithPath: values[index + 1], isDirectory: true).standardizedFileURL
+        }
     }
 }
 
@@ -33,7 +44,7 @@ enum UninstallerError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidArguments:
-            return "Usage: DeepSeekHarnessUninstaller --wait-pid <pid> --bundle <app> --home <home>"
+            return "Usage: DeepSeekHarnessUninstaller --wait-pid <pid> --bundle <app> --home <home> --mode <app-only|standard|complete> [--workspace <path>]"
         case .unsafeHome(let path):
             return "Refusing unexpected home directory: \(path)"
         case .unsafeBundle(let path):
@@ -96,9 +107,14 @@ func removeTemporaryHelper() {
 do {
     let arguments = try Arguments(Array(CommandLine.arguments.dropFirst()))
     try validate(arguments)
+    let plan = UninstallPlan(
+        locations: AppDataLocations(home: arguments.home),
+        mode: arguments.mode,
+        workspacePaths: arguments.workspacePaths
+    )
+    _ = try plan.removalPaths()
     try waitForExit(pid: arguments.waitPID)
-    let plan = UninstallPlan(locations: AppDataLocations(home: arguments.home))
-    try plan.removeOwnedData()
+    try plan.removeData()
     try trashApplication(arguments.appBundle, home: arguments.home)
     removeTemporaryHelper()
     exit(EXIT_SUCCESS)

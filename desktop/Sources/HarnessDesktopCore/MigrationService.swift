@@ -22,6 +22,28 @@ public struct MigrationManifestEntry: Hashable, Comparable {
     }
 }
 
+public struct MigrationSummary: Equatable, Sendable {
+    public let fileCount: Int
+    public let directoryCount: Int
+    public let symbolicLinkCount: Int
+    public let totalFileSize: Int64
+    public let containsUserData: Bool
+
+    public var entryCount: Int {
+        fileCount + directoryCount + symbolicLinkCount
+    }
+
+    init(manifest: [MigrationManifestEntry]) {
+        fileCount = manifest.count { $0.kind == .file }
+        directoryCount = manifest.count { $0.kind == .directory }
+        symbolicLinkCount = manifest.count { $0.kind == .symbolicLink }
+        totalFileSize = manifest.compactMap(\.fileSize).reduce(0, +)
+        containsUserData = manifest.contains {
+            $0.kind == .file && $0.relativePath != ".anonymous-user-id"
+        }
+    }
+}
+
 public final class MigrationService {
     private let fileManager: FileManager
 
@@ -39,7 +61,17 @@ public final class MigrationService {
         return isDirectoryEmptyOrMissing(locations.harnessHome)
     }
 
-    public func importLegacyHome(locations: AppDataLocations) throws {
+    public func inspectLegacyHome(locations: AppDataLocations) throws -> MigrationSummary {
+        let source = locations.legacyHarnessHome
+        var isDirectory: ObjCBool = false
+        guard fileManager.fileExists(atPath: source.path, isDirectory: &isDirectory), isDirectory.boolValue else {
+            throw MigrationError.notEligible
+        }
+        return MigrationSummary(manifest: try manifest(for: source))
+    }
+
+    @discardableResult
+    public func importLegacyHome(locations: AppDataLocations) throws -> MigrationSummary {
         let source = locations.legacyHarnessHome
         let destination = locations.harnessHome
         guard shouldOfferMigration(locations: locations) else {
@@ -68,6 +100,7 @@ public final class MigrationService {
             }
             try fileManager.moveItem(at: temporary, to: destination)
             try restrictCredentialPermissions(in: destination)
+            return MigrationSummary(manifest: sourceManifest)
         } catch {
             try? fileManager.removeItem(at: temporary)
             throw error

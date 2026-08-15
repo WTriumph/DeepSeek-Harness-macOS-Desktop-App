@@ -1,14 +1,36 @@
-DeepSeek Harness Desktop includes the following redistributable software.
+THIRD-PARTY NOTICES / 第三方软件声明
+========================================
 
 DeepSeek Harness 0.1.0-rc.5
 Copyright (c) 2026 DeepSeek
-Licensed under the MIT License. See Harness-LICENSE.txt.
+Licensed under the MIT License.
+See Resources/Licenses/Harness-LICENSE.txt.
+
+DeepSeek Harness 0.1.0-rc.5
+版权所有 (c) 2026 DeepSeek
+依据 MIT 许可证分发，完整文本见 Resources/Licenses/Harness-LICENSE.txt。
 
 Node.js 24.18.0
-Copyright Node.js contributors.
-The complete license text distributed with the official Node.js binary is
-included as Node.js-LICENSE.txt.
+Copyright Node.js contributors
+The complete license distributed with the official Node.js binary is included
+at Resources/Licenses/Node.js-LICENSE.txt.
 
-JavaScript production dependencies are included by pnpm from the immutable
-DeepSeek Harness lockfile. Their package metadata and license files remain in
-the deployed runtime under Resources/runtime/dsh/node_modules.
+Node.js 24.18.0
+版权所有 Node.js contributors
+官方 Node.js 二进制附带的完整许可证见
+Resources/Licenses/Node.js-LICENSE.txt。
+
+JavaScript production dependencies are installed from the immutable DeepSeek
+Harness lockfile. Their package license metadata remains in
+Resources/runtime/dsh/node_modules.
+
+JavaScript 生产依赖由不可变的 DeepSeek Harness 锁文件安装，其软件包许可证
+元数据保留在 Resources/runtime/dsh/node_modules 中。
+
+DeepSeek Harness Desktop is a community-maintained distribution by WTriumph.
+It is not an official DeepSeek product and is not affiliated with or endorsed
+by DeepSeek. See Resources/NOTICE.md and Resources/Licenses/Desktop-LICENSE.txt.
+
+DeepSeek Harness Desktop 是由 WTriumph 维护的社区发行版，并非 DeepSeek 官方
+产品，与 DeepSeek 不存在隶属或背书关系。详见 Resources/NOTICE.md 与
+Resources/Licenses/Desktop-LICENSE.txt。

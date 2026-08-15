@@ -5,3 +5,16 @@ dist/
 .DS_Store
 *.xcuserstate
 xcuserdata/
+
+# Local configuration, credentials, logs, and user data must never be published.
+.env
+.env.*
+!.env.example
+*.log
+*.pem
+*.key
+*.p12
+*.mobileprovision
+.dsh/
+.agents/
+DeepSeek-Harness-Backup-*.zip

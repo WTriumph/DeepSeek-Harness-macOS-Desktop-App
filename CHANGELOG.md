@@ -2,6 +2,27 @@
 
 本项目为 DeepSeek Harness 的 macOS 桌面打包，版本号跟随上游 Harness 版本（`0.1.0-rc.5`），桌面构建号记录在 `config/build-versions.env` 的 `DESKTOP_BUILD`。
 
+## [0.1.0-rc.5] Desktop Build 3
+
+### 新增 / Added
+
+- 中英双语的 App Only、Standard 与 Complete 三种卸载模式
+- Complete 模式精确列出并可备份 `~/.dsh`、`~/.agents` 和 Harness 登记的工作区，要求输入 `DELETE ALL`
+- 双语 About、NOTICE、第三方许可、隐私与安全发布说明
+
+### 修改 / Changed
+
+- 首次窗口调整为屏幕可用宽高的约 70%，已保存的用户窗口尺寸不受影响
+- 移除无实际用途的“数据与维护…”菜单及对应维护窗口
+- 桌面版版权主体更新为 WTriumph；上游 DeepSeek Harness 版权独立标注
+
+### 修复 / Fixed
+
+- 修复卸载 helper 打包到 `Contents/MacOS`、运行时却从 `Contents/Helpers` 查找导致卸载必然失败的问题
+- 完整卸载拒绝主目录、`~/Library`、卷根和系统路径，只接受精确白名单与结构化工作区记录
+- 修复 Complete 卸载确认输入框被弹窗裁切的问题；必须准确输入 `DELETE ALL` 后确认按钮才会启用
+- 修复旧迁移决定导致重新安装后不再检查 `~/.dsh` 的问题；导入前后显示文件统计，并明确提示仅有匿名元数据时界面不会发生可见变化
+
 ## [0.1.0-rc.5] Desktop Build 2
 
 ### 新增

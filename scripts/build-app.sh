@@ -282,15 +282,18 @@ log "Testing and building the native desktop shell"
 SWIFT_BIN_DIR=$(cd "$ROOT_DIR" && /usr/bin/xcrun swift build -c release --arch arm64 --show-bin-path)
 
 safe_recreate_dir "$ROOT_DIR/dist"
-/bin/mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/runtime" "$APP/Contents/Resources/Licenses"
+/bin/mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Helpers" "$APP/Contents/Resources/runtime" "$APP/Contents/Resources/Licenses"
 /bin/cp "$INFO_PLIST" "$APP/Contents/Info.plist"
 /usr/bin/plutil -replace CFBundleVersion -string "$DESKTOP_BUILD" "$APP/Contents/Info.plist"
 /bin/cp "$SWIFT_BIN_DIR/DeepSeekHarnessDesktop" "$APP/Contents/MacOS/DeepSeek Harness"
-/bin/cp "$SWIFT_BIN_DIR/DeepSeekHarnessUninstaller" "$APP/Contents/MacOS/DeepSeekHarnessUninstaller"
-/bin/chmod 755 "$APP/Contents/MacOS/DeepSeek Harness" "$APP/Contents/MacOS/DeepSeekHarnessUninstaller"
+/bin/cp "$SWIFT_BIN_DIR/DeepSeekHarnessUninstaller" "$APP/Contents/Helpers/DeepSeekHarnessUninstaller"
+/bin/chmod 755 "$APP/Contents/MacOS/DeepSeek Harness" "$APP/Contents/Helpers/DeepSeekHarnessUninstaller"
+/usr/bin/xcrun strip -S -x "$APP/Contents/MacOS/DeepSeek Harness" "$APP/Contents/Helpers/DeepSeekHarnessUninstaller"
 /usr/bin/ditto "$RUNTIME_DIR" "$APP/Contents/Resources/runtime"
 /usr/bin/unzip -p "$SOURCE_ZIP" deepseek-harness-master/LICENSE > "$APP/Contents/Resources/Licenses/Harness-LICENSE.txt"
 /bin/cp "$NODE_DIR/LICENSE" "$APP/Contents/Resources/Licenses/Node.js-LICENSE.txt"
+/bin/cp "$ROOT_DIR/LICENSE" "$APP/Contents/Resources/Licenses/Desktop-LICENSE.txt"
+/bin/cp "$ROOT_DIR/NOTICE.md" "$APP/Contents/Resources/NOTICE.md"
 /bin/cp "$ROOT_DIR/desktop/Resources/THIRD-PARTY-NOTICES.txt" "$APP/Contents/Resources/THIRD-PARTY-NOTICES.txt"
 generate_icon
 

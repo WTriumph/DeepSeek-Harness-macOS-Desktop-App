@@ -21,7 +21,7 @@
     <key>CFBundleShortVersionString</key>
     <string>0.1.0-rc.5</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>3</string>
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.developer-tools</string>
     <key>LSMinimumSystemVersion</key>
@@ -36,7 +36,7 @@
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSHumanReadableCopyright</key>
-    <string>Harness © 2026 DeepSeek (MIT). Desktop packaging © 2026 DeepSeek Harness Desktop contributors (MIT).</string>
+    <string>桌面版 / Desktop © 2026 WTriumph (MIT). 上游 Harness / Upstream Harness © 2026 DeepSeek (MIT).</string>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
     <key>NSQuitAlwaysKeepsWindows</key>

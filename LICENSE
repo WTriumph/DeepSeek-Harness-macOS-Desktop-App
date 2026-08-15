@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2026 DeepSeek Harness Desktop contributors
+Copyright (c) 2026 WTriumph
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,13 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-This repository also redistributes the following third-party software, each
-under its own license:
-
-- DeepSeek Harness 0.1.0-rc.5 — Copyright (c) 2026 DeepSeek, MIT License.
-  Distributed as an immutable source archive (`deepseek-harness-master.zip`)
-  with modifications applied through `patches/harness/`. See
-  `desktop/Resources/THIRD-PARTY-NOTICES.txt` for the packaged attribution.

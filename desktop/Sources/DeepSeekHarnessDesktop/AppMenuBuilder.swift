@@ -11,7 +11,6 @@ enum AppMenuBuilder {
         appItem.submenu = appMenu
         appMenu.addItem(withTitle: "关于 DeepSeek Harness", action: #selector(AppDelegate.showAbout(_:)), keyEquivalent: "")
         appMenu.addItem(withTitle: "设置…", action: #selector(AppDelegate.openHarnessSettings(_:)), keyEquivalent: ",")
-        appMenu.addItem(withTitle: "数据与维护…", action: #selector(AppDelegate.showSettings(_:)), keyEquivalent: "")
         appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "卸载 DeepSeek Harness…", action: #selector(AppDelegate.uninstallApplication(_:)), keyEquivalent: "")
         appMenu.addItem(.separator())

@@ -7,6 +7,7 @@
 - [ ] `./scripts/build-app.sh`（或 `DSH_FAST_BUILD=1 ./scripts/build-app.sh`）通过
 - [ ] 涉及 Harness 上游源码时：补丁已加入 `patches/harness/series`，且已在全新解压上验证按序应用
 - [ ] 涉及桌面壳时：`xcrun swift test` 通过
+- [ ] 未提交 API 密钥、凭据、个人日志、工作区或本机绝对路径
 
 ## 其他
 

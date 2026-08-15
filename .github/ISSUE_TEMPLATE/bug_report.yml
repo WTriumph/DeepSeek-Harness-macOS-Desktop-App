@@ -7,12 +7,14 @@ body:
     attributes:
       value: |
         感谢反馈！请先确认没有重复的 issue。
+        请勿提交 API 密钥、凭据、未脱敏日志或工作区文件。
+        Thanks for reporting. Never post API keys, credentials, unredacted logs, or workspace files.
   - type: input
     id: version
     attributes:
       label: 版本
       description: App 菜单「关于 DeepSeek Harness」里的版本号
-      placeholder: 0.1.0-rc.5 (Desktop 2)
+      placeholder: 0.1.0-rc.5 (Desktop 3)
     validations:
       required: true
   - type: input
@@ -40,5 +42,5 @@ body:
   - type: textarea
     id: logs
     attributes:
-      label: 日志（可选）
-      description: 「数据与维护…」→「打开日志」里的 desktop.log 内容
+      label: 已脱敏日志 / Redacted logs（可选）
+      description: 启动失败页可打开日志目录。仅粘贴与问题相关且已移除 API 密钥、凭据、用户名和工作区路径的片段；安全问题请改用 SECURITY.md 中的私密渠道。

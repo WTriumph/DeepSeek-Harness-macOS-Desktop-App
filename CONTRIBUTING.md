@@ -34,7 +34,7 @@ DSH_FAST_BUILD=1 ./scripts/build-app.sh
 
 ## 桌面壳（Swift）约定
 
-- 面向用户的文字用中文；代码注释与标识符用英文。
+- 版本、法律声明和卸载等发行文案使用中英双语；Harness 主界面文案以中文为主。代码注释与标识符用英文。
 - 核心逻辑放在 `desktop/Sources/HarnessDesktopCore`，配套单元测试放在 `desktop/Tests/HarnessDesktopCoreTests`。
 - 涉及数据删除/迁移的逻辑必须保留"只操作白名单路径"的防护，并加测试。
 
