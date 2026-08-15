@@ -62,14 +62,22 @@ macOS 社区桌面发行版。App 使用 AppKit 与 WKWebView，内置 Node.js �
 </table>
 
 <p align="center">
-  <img src="docs/assets/showcase-trajectory-crop.png" alt="DeepSeek Harness 运行轨迹视图" width="100%"><br>
+  <img src="docs/assets/showcase-trajectory-redacted.png" alt="DeepSeek Harness 运行轨迹视图，个人路径已遮挡" width="100%"><br>
   <sub>轨迹视图将模型、工具和上下文活动集中呈现</sub>
 </p>
 
-<p align="center">
-  <img src="docs/assets/showcase-about.png" alt="DeepSeek Harness 关于与版权信息" width="310"><br>
-  <sub>版本与版权归属</sub>
-</p>
+<table>
+  <tr>
+    <td width="64%" align="center">
+      <img src="docs/assets/showcase-uninstall.png" alt="DeepSeek Harness 卸载模式选择" width="100%"><br>
+      <sub>卸载服务</sub>
+    </td>
+    <td width="36%" align="center">
+      <img src="docs/assets/showcase-about.png" alt="DeepSeek Harness 关于与版权信息" width="280"><br>
+      <sub>版本与版权归属</sub>
+    </td>
+  </tr>
+</table>
 
 ## 相较上游版本的改进与修改
 
