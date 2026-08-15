@@ -1,6 +1,25 @@
-# DeepSeek Harness macOS 桌面版 | Native macOS Desktop App
+<p align="center">
+  <img src="docs/assets/app-icon.png" alt="DeepSeek Harness macOS app icon" width="112">
+</p>
 
-中文 | [English](#english)
+<h1 align="center">DeepSeek Harness macOS Desktop App</h1>
+
+<p align="center"><strong>DeepSeek Harness macOS 桌面版</strong></p>
+
+<p align="center">
+  <a href="#中文">中文</a>
+  &nbsp;&middot;&nbsp;
+  <a href="#english">English</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/WTriumph/DeepSeek-Harness-macOS-Desktop-App/releases"><img src="https://img.shields.io/github/v/release/WTriumph/DeepSeek-Harness-macOS-Desktop-App?display_name=tag&style=flat-square" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/macOS-13%2B-111111?style=flat-square&logo=apple" alt="macOS 13 or later">
+  <img src="https://img.shields.io/badge/Apple%20Silicon-arm64-111111?style=flat-square&logo=apple" alt="Apple Silicon arm64">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2f81f7?style=flat-square" alt="MIT License"></a>
+</p>
+
+<a id="中文"></a>
 
 由 WTriumph 维护的 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)
 macOS 社区桌面发行版。App 使用 AppKit 与 WKWebView，内置 Node.js 和生产运行时，
@@ -21,6 +40,36 @@ macOS 社区桌面发行版。App 使用 AppKit 与 WKWebView，内置 Node.js �
 - 保存窗口大小和位置；首次窗口约为屏幕可用宽高的 70%
 - 独立桌面数据目录，可选择从旧的 `~/.dsh` 导入副本
 - App Only、Standard、Complete 三种双语卸载模式
+
+## 软件展示
+
+<p align="center">
+  <img src="docs/assets/showcase-start-light.png" alt="DeepSeek Harness 浅色模式主界面" width="100%">
+</p>
+<p align="center"><sub>开箱即用的原生窗口，启动后直接进入 Harness 工作区</sub></p>
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="docs/assets/showcase-conversation-dark.png" alt="DeepSeek Harness 深色模式任务执行" width="100%"><br>
+      <sub>深色模式下的会话、工具调用与任务状态</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="docs/assets/showcase-settings-light.png" alt="DeepSeek Harness 设置界面" width="100%"><br>
+      <sub>语言、权限、Agent 预设与外观设置</sub>
+    </td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="docs/assets/showcase-trajectory-crop.png" alt="DeepSeek Harness 运行轨迹视图" width="100%"><br>
+  <sub>轨迹视图将模型、工具和上下文活动集中呈现</sub>
+</p>
+
+<p align="center">
+  <img src="docs/assets/showcase-about.png" alt="DeepSeek Harness 关于与版权信息" width="310"><br>
+  <sub>清晰标注社区发行版、上游项目、版本与版权归属</sub>
+</p>
 
 ## 相较上游版本的改进与修改
 
